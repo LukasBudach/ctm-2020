@@ -37,3 +37,16 @@ get_frequency_matrix <- function(dataset, sparse=0.999) {
   colnames(freq) <- dataset$SpeechDbId
   return(freq)
 }
+
+serialize_results_text <- function(filepath, obj) {
+  f <- file(filepath, 'w+')
+  serialize(connection=f, object=obj, ascii=TRUE)
+  close(f)
+}
+
+unserialize_results_text <- function(filepath) {
+  f <- file(filepath, 'r')
+  ret <- unserialize(f)
+  close(f)
+  return(ret)
+}

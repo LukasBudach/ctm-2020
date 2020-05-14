@@ -13,4 +13,8 @@ for(i in seq(min(data$Period), max(data$Period))) {
 data <- read_speeches('data/database_export_search_89.csv')
 d_6 <- filter_period(data, 6)
 mat <- get_frequency_matrix(d_6, 0.99)
-res <- wordfish(mat, dir=c(1,2))
+res <- wordfish(mat, dir=c(1,2), tol=0.00015)
+
+# write and read the result
+serialize_results_text('data/test.txt', res)
+r2 <- unserialize_results_text('data/test.txt')
