@@ -1,9 +1,4 @@
-
 rm(list=ls(all=TRUE))
-library(tm)
-
-
-
 
 # =====================
 # WORDFISH VERSION 1.3
@@ -703,69 +698,3 @@ return(list(documents=output.documents,words=output.words,diffllik=est$diffllik,
 
 
 }
-
-
-
-
-# ============================================================
-# SAMPLE CODE FOR RUNNING WORDFISH WITH AN EXISTING
-# WORD COUNT DATASET
-# ============================================================
-
-# LOAD DATA
-wordcountdata<-read.table("YOURDATA.csv")
-
-
-# RUN WORDFISH
-example.A<-wordfish(wordcountdata,wordsincol=TRUE,dir=c(1,6)) 
-
-# SHOW QUANTITIES OF INTEREST
-example.A$documents
-example.A$words
-
-
-
-
-# ============================================================
-# SAMPLE CODE FOR RUNNING WORDFISH WITH TEXT MINING PACKAGE TM
-# Please refer to the documentation of the TM package 
-# for more information
-# ============================================================
-
-
-# DEFINE DIRECTORY THAT CONTAIN UTF-8 TEXT DOCUMENTS HERE 
-directory<-"YOUR DIRECTORY"
-
-# LOAD TEXT DOC COLLECTION (Here: German)
-textcorpus<-Corpus(DirSource(directory),readerControl = list(reader=readPlain,language = "de", load = FALSE))
-
-
-# EXTRACT FILE NAMES
-docnames<-list.files(directory)
-
-	for (i in 1:length(textcorpus)){
-		Author(textcorpus[[i]])<-docnames[i]
-		}
-
-# PRINT SUMMARY OF DOC COLLECTION
-summary(textcorpus)
-
-
-# GENERATE TERM-DOCUMENT MATRIX
-text.corpus.format<-textcorpus
-text.corpus.format<-tmMap(text.corpus.format,tmTolower) # MAKES EVERYTHING LOWERCASE
-text.corpus.format<-tmMap(text.corpus.format,removeNumbers) # REMOVE NUMBERS
-text.corpus.format<-tmMap(text.corpus.format,stripWhitespace) # REMOVE EXTRA WHITE SPACE
-wordfreqmatrix <-TermDocMatrix(text.corpus.format)  
-dim(wordfreqmatrix)
-wordfreq<-as.matrix(wordfreqmatrix) # CONVERT WORD COUNT MATRIX FOR USE WITH WORDFISH
-rownames(wordfreq)<-lapply(text.corpus.format,Author) # ASSIGN DOC TITLES TO MATRIX
-wordfreq<-t(wordfreq) # TRANSPOSE TERM DOC MATRX
-
-
-# RUN WORDFISH 
-example.B<-wordfish(wordfreq,dir=c(1,6)) 
-
-# Print out some quantities of interest
-example.B$documents
-example.B$words

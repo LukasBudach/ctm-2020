@@ -65,3 +65,29 @@ unserialize_results_text <- function(filepath) {
   close(f)
   return(ret)
 }
+
+filter_coal_percentile <- function(dataset, min_percentage) {
+  library(stringr)
+
+  cts <- data.frame()
+  for(i in seq(1, nrow(dataset))) {
+    cts <- rbind(cts, list(dataset$SpeechDbId[i], sapply(strsplit(dataset$Speech[i], " "), length),
+                           str_count(dataset$Speech[i], 'K*k*ohle')))
+  }
+  colnames(cts) <- c('SpeechDbId', 'WordCount', 'CoalCount')
+
+  return(cts[cts$CoalCount / cts$WordCount >= min_percentage,])
+}
+
+filter_coal_count <- function(dataset, min_count) {
+  library(stringr)
+
+  cts <- data.frame()
+  for(i in seq(1, nrow(dataset))) {
+    cts <- rbind(cts, list(dataset$SpeechDbId[i], sapply(strsplit(dataset$Speech[i], " "), length),
+                           str_count(dataset$Speech[i], 'K*k*ohle')))
+  }
+  colnames(cts) <- c('SpeechDbId', 'WordCount', 'CoalCount')
+
+  return(cts[cts$CoalCount >= min_count,])
+}
