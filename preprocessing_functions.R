@@ -34,8 +34,23 @@ get_frequency_matrix <- function(dataset, sparse=0.999) {
   freq_mat <- TermDocumentMatrix(corpus)
   sparce_mat <- removeSparseTerms(freq_mat, sparse)
   freq <- as.matrix(sparce_mat)
-  colnames(freq) <- dataset$SpeechDbId
+  colnames(freq) <- dataset$ID
   return(freq)
+}
+
+concat_by_speaker <- function(dataset) {
+  u_speakers <- unique(dataset$Speaker)
+  r_speeches <- data.frame()
+  for(speaker in u_speakers) {
+    speeches <- dataset$Speech[dataset$Speaker == speaker]
+    concat <- ''
+    for(speech in speeches) {
+      concat <- paste(concat, speech)
+    }
+    r_speeches <- rbind(r_speeches, list(speaker, concat))
+  }
+  colnames(r_speeches) <- c('ID', 'Speech')
+  return(r_speeches)
 }
 
 serialize_results_text <- function(filepath, obj) {
