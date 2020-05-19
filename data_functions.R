@@ -91,3 +91,29 @@ tdmat_coal_percent <- function(data, min_period, max_period, concat_mode, coal_t
   # create and return the term document matrix
   return(get_frequency_matrix(documents, sparse))
 }
+
+# concat mode is 0 for none (keep speeches) 1 for speakers and 2 for parties
+tdmat_coal_sections_only <- function(data, min_period, max_period, concat_mode, words_around, sparse) {
+  data_filtered <- data
+
+  # filter by coal counts
+  data_filtered <- get_only_coal_segments(data_filtered, words_around)
+
+  # create the documents object with ID and Speech field
+  documents <- data.frame()
+  if (concat_mode == 0) {
+    for (i in seq(1, nrow(data_filtered))) {
+      documents <- rbind(documents, list(data_filtered$SpeechDbId[i], data_filtered$Speech[i]))
+    }
+    colnames(documents) <- c('ID', 'Speech')
+  } else if (concat_mode == 1) {
+    documents <- concat_by_speaker(data_filtered, multiple_periods=(min_period != max_period))
+  } else if (concat_mode == 2) {
+    documents <- concat_by_party(data_filtered, multiple_periods=(min_period != max_period))
+  } else {
+    return()
+  }
+
+  # create and return the term document matrix
+  return(get_frequency_matrix(documents, sparse))
+}

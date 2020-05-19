@@ -116,3 +116,70 @@ filter_coal_count <- function(dataset, min_count) {
 
   return(cts[cts$CoalCount >= min_count,])
 }
+
+get_only_coal_segments <- function(dataset, words_around) {
+  library(stringr)
+  cut_speeches <- dataset
+  for (j in seq(1, nrow(dataset))) {
+    positions <- str_locate_all(dataset$Speech[j], '(K|k)ohle')[[1]]
+    positions[,'start'] <- positions[,'start'] - words_around
+    positions[,'end'] <- positions[,'end'] + words_around
+
+    for (i in seq(1, nrow(positions))) {
+      positions[i, 'start'] <- max(positions[i, 'start'], 0)
+      positions[i, 'end'] <- min(positions[i, 'end'], nchar(dataset$Speech[j]))
+
+      while (substring(dataset$Speech[j], positions[i, 'start'], positions[i, 'start']) != ' ') {
+        if (positions[i, 'start'] == 0) {
+          break
+        }
+        positions[i, 'start'] <- positions[i, 'start'] - 1
+      }
+      while (substring(dataset$Speech[j], positions[i, 'end'], positions[i, 'end']) != ' ') {
+        if (positions[i, 'end'] == nchar(dataset$Speech[j])) {
+          break
+        }
+        positions[i, 'end'] <- positions[i, 'end'] + 1
+      }
+      if ((positions[i, 'start'] == 0) || (positions[i, 'end'] == nchar(dataset$Speech[j]))) {
+        next
+      }
+      positions[i, 'start'] <- positions[i, 'start'] + 1
+      positions[i, 'end'] <- positions[i, 'end'] - 1
+    }
+
+    found_matches <- TRUE
+    while(found_matches){
+      valids <- NULL
+      found_matches <- FALSE
+      if (nrow(positions) == 1) {
+        break
+      }
+      for (i in seq(1, nrow(positions) - 1)) {
+        if (positions[i, 'end'] >= positions[i+1, 'start']) {
+          found_matches <- TRUE
+          positions[i, 'end'] <- positions[i+1, 'end']
+          positions[i+1, 'start'] <- 0
+          positions[i+1, 'end'] <- 0
+        } else if (sum(positions[i]) == 0) {
+          valids <- append(valids, FALSE)
+          next
+        }
+        valids <- append(valids, TRUE)
+      }
+      valids <- append(valids, sum(positions[nrow(positions)]) != 0)
+      positions <- matrix(positions[valids,], ncol=2)
+      colnames(positions) <- c('start', 'end')
+    }
+    new_speech <- ''
+    for (i in seq(1, nrow(positions))) {
+      if (new_speech == '') {
+        new_speech <- paste0(new_speech, substr(dataset$Speech[j], positions[i, 'start'], positions[i, 'end']))
+      } else {
+        new_speech <- paste(new_speech, substr(dataset$Speech[j], positions[i, 'start'], positions[i, 'end']))
+      }
+    }
+    cut_speeches$Speech[j] <- new_speech
+  }
+  return(cut_speeches)
+}
