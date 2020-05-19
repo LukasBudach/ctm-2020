@@ -55,3 +55,8 @@ cts <- cts[cts$CoalCount >= 3,]
 
 d_19_coal <- d_19[d_19$SpeechDbId %in% cts$SpeechDbId,]
 
+speeches <- concat_by_speaker(d_19)
+mat <- get_frequency_matrix(speeches, 0.9999)
+res <- wordfish(mat, dir=c(46, 30))
+serialize_results_text('data/speakers.txt', res)
+eiffeltower <- draw_eiffel_tower_diagram(res, 'data/eiffeltower.png')
