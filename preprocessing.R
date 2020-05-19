@@ -45,13 +45,28 @@ speaker_speeches_by_party(raw=filtered_data, res=res, filename='data/speakers_cp
 # run wordfish for periods 17-19 without any specific filtering, grouped by party
 filtered_data <- load_periods('data/database_export_search_89.csv', min_period=17, max_period=19)
 tdmat <- tdmat_regular(data=filtered_data,
-                            min_period=17,
-                            max_period=19,
-                            concat_mode=2, # concat by speaker
-                            sparse=0.9999)
+                       min_period=17,
+                       max_period=19,
+                       concat_mode=2, # concat by party
+                       sparse=0.9999)
 res <- run_wordfish(tdmat=tdmat,
                     repr_1=7, # representative for position 1
                     repr_2=9, # representative for position 2
                     name='parties_r_green18_cdu18_p17_19',
                     tol=1e-7)
 party_speeches_by_party(raw=filtered_data, res=res, filename='data/parties_r_green18_cdu18_p17_19.png', TRUE)
+
+
+# run wordfish for period 19 without any specific filtering, grouped by speaker
+filtered_data <- load_periods('data/database_export_search_89.csv', min_period=19, max_period=19)
+tdmat <- tdmat_regular(data=filtered_data,
+                            min_period=19,
+                            max_period=19,
+                            concat_mode=1, # concat by speaker
+                            sparse=0.9999)
+res <- run_wordfish(tdmat=tdmat,
+                    repr_1=46, # representative for position 1
+                    repr_2=30, # representative for position 2
+                    name='speakers_r_Kießling_Roth_p19',
+                    tol=1e-7)
+draw_eiffel_tower_diagram(res=res, filename='data/speakers_r_Kießling_Roth_p19.png')

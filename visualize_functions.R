@@ -98,3 +98,11 @@ party_speeches_by_party <- function(raw, res, filename, multiple_periods=FALSE) 
   #abline(h=mean(plottable$position[plottable$color == 'red']), col='red')
   dev.off()
 }
+
+draw_eiffel_tower_diagram <- function (res, filename){
+  png(filename=filename, width=6000, height=6000)
+  plot(res$words[, 'b'], res$words[, 'psi'], xlab="Word Weights", ylab="Word Fixed Effect")
+  text(res$words[, 'b'], res$words[, 'psi'], rownames(res$words))
+  dev.off()
+}
+
