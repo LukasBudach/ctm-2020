@@ -3,6 +3,11 @@
 # Created by: lukas
 # Created on: 19/05/2020
 
+# random stuff
+for(i in seq(min(data$Period), max(data$Period))) {
+  print(sprintf('Period: %d speeches: %d', i, nrow(filter_period(data, i))))
+}
+
 for (el in data) {
   print(el)
 }
