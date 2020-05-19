@@ -25,6 +25,10 @@ filter_period <- function(dataset, period) {
   return(dataset[dataset$Period == period,])
 }
 
+filter_period_range <- function(dataset, min, max) {
+  return(dataset[dataset$Period %in% seq(min, max), ])
+}
+
 get_frequency_matrix <- function(dataset, sparse=0.999) {
   library(tm)
   corpus <- VCorpus(VectorSource(dataset$Speech))
@@ -38,7 +42,10 @@ get_frequency_matrix <- function(dataset, sparse=0.999) {
   return(freq)
 }
 
-concat_by_speaker <- function(dataset) {
+concat_by_speaker <- function(dataset, multiple_periods=FALSE) {
+  if (multiple_periods) {
+    dataset$Speaker <- paste0(dataset$Speaker,'_',dataset$Period)
+  }
   u_speakers <- unique(dataset$Speaker)
   r_speeches <- data.frame()
   for(speaker in u_speakers) {
@@ -48,6 +55,24 @@ concat_by_speaker <- function(dataset) {
       concat <- paste(concat, speech)
     }
     r_speeches <- rbind(r_speeches, list(speaker, concat))
+  }
+  colnames(r_speeches) <- c('ID', 'Speech')
+  return(r_speeches)
+}
+
+concat_by_party <- function(dataset, multiple_periods=FALSE) {
+  if (multiple_periods) {
+    dataset$Party <- paste0(dataset$Party, '_', dataset$Period)
+  }
+  u_parties <- unique(dataset$Party)
+  r_speeches <- data.frame()
+  for(party in u_parties) {
+    speeches <- dataset$Speech[dataset$Party == party]
+    concat <- ''
+    for(speech in speeches) {
+      concat <- paste(concat, speech)
+    }
+    r_speeches <- rbind(r_speeches, list(party, concat))
   }
   colnames(r_speeches) <- c('ID', 'Speech')
   return(r_speeches)

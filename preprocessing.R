@@ -13,45 +13,51 @@ for(i in seq(min(data$Period), max(data$Period))) {
 data <- read_speeches('data/database_export_search_89.csv')
 d_19 <- filter_period(data, 19)
 
-# use for coal percentages
-coal_counts <- filter_coal_percentile(d_19, 0.005)
-d_19_coal_perc <- d_19[d_19$SpeechDbId %in% coal_counts$SpeechDbId,]
-speeches <- concat_by_speaker(d_19_coal_perc)
-mat <- get_frequency_matrix(speeches, 0.9999)
-res <- wordfish(mat, dir=c(46, 30))
-serialize_results_text('data/speakers_coal_pct_05_Wirth_Movassat.txt', res)
-speeches_by_party(d_19, res, 'data/speakers_coal_pct_05_Wirth_Movassat.png')
+# read serialized results
+res <- unserialize_results_text('data/long_result.txt')
+
+# run wordfish for coal counts
+filtered_data <- load_periods('data/database_export_search_89.csv', min_period=19, max_period=19)
+tdmat <- tdmat_coal_counts(data=filtered_data,
+                           min_period=19, # only use period 19, so set both
+                           max_period=19, # min and max to 19
+                           concat_mode=1, # concat by speaker
+                           coal_thresh=3, # filter out all speeches with less than 3 mentions of Kohle (or similar)
+                           sparse=0.9999)
+res <- run_wordfish(tdmat=tdmat,
+                    repr_1=32, # representative for position 1
+                    repr_2=6,  # representative for position 2
+                    name='speakers_cc_Kotre_Beutin_p19_t3',
+                    tol=1e-7)
+speaker_speeches_by_party(raw=filtered_data, res=res, filename='data/speakers_cc_Kotre_Beutin_p19_t3.png')
 
 
-# use for coal counts
-coal_counts <- filter_coal_count(d_19, 3)
-d_19_coal_count <- d_19[d_19$SpeechDbId %in% coal_counts$SpeechDbId,]
-speeches <- concat_by_speaker(d_19_coal_count)
-mat <- get_frequency_matrix(speeches, 0.9999)
-res <- wordfish(mat, dir=c(32, 6))
-serialize_results_text('data/speakers_coal_count_3_Kotre_Beutin.txt', res)
-speeches_by_party(d_19, res, 'data/speakers_coal_count_3_Kotre_Beutin.png')
+# run wordfish for coal percentages
+filtered_data <- load_periods('data/database_export_search_89.csv', min_period=19, max_period=19)
+tdmat <- tdmat_coal_percent(data=filtered_data,
+                            min_period=19, # only use period 19, so set both
+                            max_period=19, # min and max to 19
+                            concat_mode=1, # concat by speaker
+                            coal_thresh=3, # filter out all speeches with less than 3 mentions of Kohle (or similar)
+                            sparse=0.9999)
+res <- run_wordfish(tdmat=tdmat,
+                    repr_1=32, # representative for position 1
+                    repr_2=6,  # representative for position 2
+                    name='speakers_cp_Wirth_Movassat_p19_t0_005',
+                    tol=1e-7)
+speaker_speeches_by_party(raw=filtered_data, res=res, filename='data/speakers_cp_Wirth_Movassat_p19_t0_005.png')
 
 
-res <- unserialize_results_text('data/test_speakers_19_fixtwo.txt')
-
-library(stringr)
-
-cts <- data.frame()
-for(i in seq(1, nrow(speeches))) {
-  cts <- rbind(cts, list(speeches$ID[i], str_count(speeches$Speech[i], 'K*k*ohle') / sapply(strsplit(speeches$Speech[i], " "), length)))
-}
-colnames(cts) <- c('ID', 'CoalPct')
-
-library(stringr)
-
-cts <- data.frame()
-for(i in seq(1, nrow(speeches))) {
-  cts <- rbind(cts, list(speeches$ID[i], str_count(speeches$Speech[i], 'K*k*ohle')))
-}
-colnames(cts) <- c('ID', 'CoalCount')
-
-cts <- cts[cts$CoalCount >= 3,]
-
-d_19_coal <- d_19[d_19$SpeechDbId %in% cts$SpeechDbId,]
-
+# run wordfish for periods 17-19 without any specific filtering, grouped by party
+filtered_data <- load_periods('data/database_export_search_89.csv', min_period=17, max_period=19)
+tdmat <- tdmat_regular(data=filtered_data,
+                            min_period=17,
+                            max_period=19,
+                            concat_mode=2, # concat by speaker
+                            sparse=0.9999)
+res <- run_wordfish(tdmat=tdmat,
+                    repr_1=7, # representative for position 1
+                    repr_2=9, # representative for position 2
+                    name='parties_r_green18_cdu18_p17_19',
+                    tol=1e-7)
+party_speeches_by_party(raw=filtered_data, res=res, filename='data/parties_r_green18_cdu18_p17_19.png', TRUE)
