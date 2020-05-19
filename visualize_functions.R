@@ -101,7 +101,7 @@ party_speeches_by_party <- function(raw, res, filename, multiple_periods=FALSE) 
 
 draw_eiffel_tower_diagram <- function (res, filename){
   png(filename=filename, width=6000, height=6000)
-  plot(res$words[, 'b'], res$words[, 'psi'], xlab="Word Weights", ylab="Word Fixed Effect")
+  plot(res$words[, 'b'], res$words[, 'psi'], xlab="Word Weights", ylab="Word Fixed Effect", type="n")
   text(res$words[, 'b'], res$words[, 'psi'], rownames(res$words))
   dev.off()
 }
