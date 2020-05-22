@@ -117,15 +117,8 @@ filter_coal_count <- function(dataset, min_count) {
   return(cts[cts$CoalCount >= min_count,])
 }
 
-get_only_coal_segments <- function(dataset, words_around) {
-  library(stringr)
-  cut_speeches <- dataset
-  for (j in seq(1, nrow(dataset))) {
-    positions <- str_locate_all(dataset$Speech[j], '(K|k)ohle')[[1]]
-    positions[,'start'] <- positions[,'start'] - words_around
-    positions[,'end'] <- positions[,'end'] + words_around
-
-    for (i in seq(1, nrow(positions))) {
+get_complete_words <- function(dataset, j, positions){
+  for (i in seq(1, nrow(positions))) {
       positions[i, 'start'] <- max(positions[i, 'start'], 0)
       positions[i, 'end'] <- min(positions[i, 'end'], nchar(dataset$Speech[j]))
 
@@ -147,8 +140,11 @@ get_only_coal_segments <- function(dataset, words_around) {
       positions[i, 'start'] <- positions[i, 'start'] + 1
       positions[i, 'end'] <- positions[i, 'end'] - 1
     }
+  return(positions)
+}
 
-    found_matches <- TRUE
+combine_overlapping_segments <- function(positions){
+  found_matches <- TRUE
     while(found_matches){
       valids <- NULL
       found_matches <- FALSE
@@ -171,12 +167,55 @@ get_only_coal_segments <- function(dataset, words_around) {
       positions <- matrix(positions[valids,], ncol=2)
       colnames(positions) <- c('start', 'end')
     }
+  return(positions)
+}
+
+get_only_coal_segments <- function(dataset, words_around) {
+  library(stringr)
+  cut_speeches <- dataset
+  for (j in seq(1, nrow(dataset))) {
+    positions <- str_locate_all(dataset$Speech[j], '(K|k)ohle')[[1]]
+    positions[,'start'] <- positions[,'start'] - words_around
+    positions[,'end'] <- positions[,'end'] + words_around
+
+    positions <- get_complete_words(dataset, j, positions)
+
+    positions <- combine_overlapping_segments(positions)
+
     new_speech <- ''
     for (i in seq(1, nrow(positions))) {
       if (new_speech == '') {
         new_speech <- paste0(new_speech, substr(dataset$Speech[j], positions[i, 'start'], positions[i, 'end']))
       } else {
         new_speech <- paste(new_speech, substr(dataset$Speech[j], positions[i, 'start'], positions[i, 'end']))
+      }
+    }
+    cut_speeches$Speech[j] <- new_speech
+  }
+  return(cut_speeches)
+}
+
+get_segments_without_coal <- function(dataset, words_around) {
+  library(stringr)
+  cut_speeches <- dataset
+  for (j in seq(1, nrow(dataset))) {
+    positions <- str_locate_all(dataset$Speech[j], '(K|k)ohle')[[1]]
+    positions[,'start'] <- positions[,'start'] - words_around
+    positions[,'end'] <- positions[,'end'] + words_around
+
+    positions <- get_complete_words(dataset, j, positions)
+
+    positions <- combine_overlapping_segments(positions)
+
+    new_speech <- ''
+    for (i in seq(1, nrow(positions))) {
+      if (new_speech == '') {
+        new_speech <- paste0(new_speech, substr(dataset$Speech[j], 0, positions[i, 'start']))
+      } else {
+        new_speech <- paste(new_speech, substr(dataset$Speech[j], positions[i-1, 'end'], positions[i, 'start']))
+        if (i == nrow(positions)) {
+          new_speech <- paste(new_speech, substr(dataset$Speech[j], positions[i, 'end'], nchar(dataset$Speech[j])))
+        }
       }
     }
     cut_speeches$Speech[j] <- new_speech

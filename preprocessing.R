@@ -127,7 +127,7 @@ filtered_data <- load_periods('data/database_export_search_89.csv', min_period=1
 tdmat <- tdmat_coal_sections_only(data=filtered_data,
                                   min_period=19,
                                   max_period=19,
-                                  concat_mode=1, # concat by party
+                                  concat_mode=1, # concat by speaker
                                   words_around=100,
                                   sparse=0.9999)
 res <- run_wordfish(tdmat=tdmat,
@@ -144,7 +144,7 @@ filtered_data <- load_periods('data/database_export_search_89.csv', min_period=1
 tdmat <- tdmat_coal_sections_only(data=filtered_data,
                                   min_period=19,
                                   max_period=19,
-                                  concat_mode=1, # concat by party
+                                  concat_mode=1, # concat by speaker
                                   words_around=200,
                                   sparse=0.9999)
 res <- run_wordfish(tdmat=tdmat,
@@ -161,7 +161,7 @@ filtered_data <- load_periods('data/database_export_search_89.csv', min_period=1
 tdmat <- tdmat_coal_sections_only(data=filtered_data,
                                   min_period=19,
                                   max_period=19,
-                                  concat_mode=1, # concat by party
+                                  concat_mode=1, # concat by speaker
                                   words_around=50,
                                   sparse=0.9999)
 res <- run_wordfish(tdmat=tdmat,
@@ -171,4 +171,26 @@ res <- run_wordfish(tdmat=tdmat,
                     tol=1e-7)
 speaker_speeches_by_party(raw=filtered_data, res=res, filename='data/speakers_co_Hofreiter_Hollnagel_p19_wa_50.png')
 draw_eiffel_tower_diagram(res=res, filename='data/speakers_co_Hofreiter_Hollnagel_p19_wa_50_words.png')
+
+# run wordfish for period 19 on only the text that doesn't include coal, grouped by party
+filtered_data <- load_periods('data/database_export_search_89.csv', min_period=19, max_period=19)
+
+#### START TESTING: DELETE LATER
+without_coal <- get_segments_without_coal(filtered_data, 100)
+only_coal <- get_only_coal_segments(filtered_data, 100)
+#### END TESTING
+
+tdmat <- tdmat_without_coal_sections(data=filtered_data,
+                                  min_period=19,
+                                  max_period=19,
+                                  concat_mode=2, # concat by party
+                                  words_around=100,
+                                  sparse=0.999)
+res <- run_wordfish(tdmat=tdmat,
+                    repr_1=72, # representative for position 1
+                    repr_2=163, # representative for position 2
+                    name='speakers_wc_pol1_pol2_p19_wa_100',
+                    tol=1e-7)
+speaker_speeches_by_party(raw=filtered_data, res=res, filename='data/speakers_wc_pol1_pol2_p19_wa_100.png')
+draw_eiffel_tower_diagram(res=res, filename='data/speakers_wc_pol1_pol2_p19_wa_100_words.png')
 
