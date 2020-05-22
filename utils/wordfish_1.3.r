@@ -1,4 +1,4 @@
-rm(list=ls(all=TRUE))
+# rm(list=ls(all=TRUE))
 
 # =====================
 # WORDFISH VERSION 1.3

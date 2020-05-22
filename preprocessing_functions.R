@@ -22,6 +22,158 @@ read_speeches <- function(filepath) {
 }
 
 
+# filter attributes:
+#   dataset -> the dataset to be processed
+#   dataset -> must be a data.frame with the columns Index, SpeechDbId, Date, Period, Sitting, DocDbId, Speaker, Party,
+#                                                    InterjectionCount, InterjectionContent, ParagraphCount, Speech
+#   mode -> filtering mode as string, options:
+#           p  -> filter by period, keeping every period starting at the given min_period and ending with the max_period
+#           cc -> filter by coal count, keeping only speeches with a coal count greater or equal to the given threshold
+#           cp -> filter by coal percentage, keeping speeches with a coal percentage greater/equal to the threshold
+#           co -> filter, keeping only parts of speeches that are within the chars_around area around an occurence of coal in the text
+#           nc -> filter, keeping only parts of speeches that are NOT within the chars_around area around an occurence of coal in the text
+#           np -> filter, removing all speeches by the Bundestagspräsident(en) in the dataset
+#
+#   returns the resulting data as data.frame with the same columns as the input (but likely less rows!)
+
+filter <- function(dataset, mode, min_period=NULL, max_period=NULL, threshold=NULL, chars_around=NULL) {
+  source('utils/filter_functions.R')
+  # perform input argument validation:
+  required_colnames <- c('Index', 'SpeechDbId', 'Date', 'Period', 'Sitting', 'DocDbId', 'Speaker', 'Party',
+                         'InterjectionCount', 'InterjectionContent', 'ParagraphCount', 'Speech')
+  valid_modes <- c('p', 'cc', 'cp', 'co', 'nc', 'np')
+
+  # validate dataset
+  if (! is.data.frame(dataset)) {
+    stop('ERROR The given dataset is not a data.frame object, which is required.')
+  } else if (ncol(dataset) != 12) {
+    stop('ERROR The given dataset does not have 12 columns as required.')
+  } else if (! all(colnames(dataset) == required_colnames)) {
+    stop('ERROR The given dataset does not have the required column names.')
+  }
+
+  # validate given mode
+  if (typeof(mode) != 'character') {
+    stop('ERROR The given mode argument is not a character vector, which is required.')
+  } else if (! mode %in% valid_modes) {
+    stop('ERROR The given mode argument is not a supported mode.')
+  } else if ((mode == 'p') & ((is.null(min_period)) | (is.null(max_period)))) {
+    stop('ERROR When filtering by period, the minimal and maximal period arguments must be set.')
+  } else if ((mode == 'cc') && (is.null(threshold))) {
+    stop('ERROR When filtering by coal count, the threshold argument must be set.')
+  } else if ((mode == 'cp') && (is.null(threshold))) {
+    stop('ERROR When filtering by coal percentage, the threshold argument must be set.')
+  } else if ((mode == 'co') && (is.null(chars_around))) {
+    stop('ERROR When filtering to keep the parts of speeches around coal only, the characters to be kept around these words need to be set.')
+  } else if ((mode == 'nc') && (is.null(chars_around))) {
+    stop('ERROR When filtering to keep the parts of speeches that do not contain a specified area around coal, the characters to be kept need to be set.')
+  }
+
+  # do the filtering
+  filtered_dataset <- NULL
+  switch(mode,
+         p={  # filter by period
+           filtered_dataset <- filter_period_range_(dataset, min_period, max_period)
+         },
+         cc={ # filter by count of words containing Kohle or kohle per speech
+           filtered_dataset <- filter_coal_count_(dataset, threshold)
+         },
+         cp={ # filter by percentage of words containing Kohle or kohle per speech
+           filtered_dataset <- filter_coal_percentage_(dataset, threshold)
+         },
+         co={ # only keep those parts of each speech, that are in proximity to a word containing Kohle or kohle
+           filtered_dataset <- filter_coal_only_segments_(dataset, chars_around)
+         },
+         nc={ # only keep those parts of each speech, that are not in proximity to a word containing Kohle or kohle
+           filtered_dataset <- filter_non_coal_segments_(dataset, chars_around)
+         },
+         np= { # only keep the speeches made by speakers that were not Bundestagspräsident at the time of the speech
+           filtered_dataset <- filter_non_parliament_president_speaker_(dataset)
+         }
+  )
+
+  # check whether the filtered dataset still has the valid shape, which is same as input dataset in this case
+  if (! is.data.frame(filtered_dataset)) {
+    stop('ERROR The filtered dataset is not a data.frame object, which is required.')
+  } else if (ncol(filtered_dataset) != 12) {
+    stop('ERROR The filtered dataset does not have 12 columns as required.')
+  } else if (! all(colnames(filtered_dataset) == required_colnames)) {
+    stop('ERROR The filtered dataset does not have the required column names.')
+  }
+
+  return(filtered_dataset)
+}
+
+
+# group_speeches attributes:
+#   dataset -> the dataset to be processed
+#   dataset -> must be a data.frame with the columns Index, SpeechDbId, Date, Period, Sitting, DocDbId, Speaker, Party,
+#                                                    InterjectionCount, InterjectionContent, ParagraphCount, Speech
+#
+#   mode -> grouping mode as string, options:
+#     none -> no grouping will be conducted, the IDs for the returned documents are their SpeechDbId
+#     speaker -> grouping by speaker, the IDs for the returned documents are their speaker name and the document is all
+#                speeches of the speeker concatenated
+#     party -> grouping by party, the IDs for the returned documents are their party name and the document is all
+#              speeches of the party concatenated
+#
+#   multiple_periods -> default is FALSE, set to TRUE if multiple election periods are in the dataset, will cause the
+#                       period number to be appended to the speaker/party name for the returned IDs
+#
+#   returns the resulting data as data.frame with the two columns ID and Speech
+
+group_speeches <- function(dataset, mode, multiple_periods=FALSE) {
+  source('utils/grouping_functions.R')
+
+  # perform input argument validation:
+  required_colnames <- c('Index', 'SpeechDbId', 'Date', 'Period', 'Sitting', 'DocDbId', 'Speaker', 'Party',
+                         'InterjectionCount', 'InterjectionContent', 'ParagraphCount', 'Speech')
+  valid_modes <- c('none', 'speaker', 'party')
+
+  # validate dataset
+  if (! is.data.frame(dataset)) {
+    stop('ERROR The given dataset is not a data.frame object, which is required.')
+  } else if (ncol(dataset) != 12) {
+    stop('ERROR The given dataset does not have 12 columns as required.')
+  } else if (! all(colnames(dataset) == required_colnames)) {
+    stop('ERROR The given dataset does not have the required column names.')
+  }
+
+  # validate given mode
+  if (typeof(mode) != 'character') {
+    stop('ERROR The given mode argument is not a character vector, which is required.')
+  } else if (! mode %in% valid_modes) {
+    stop('ERROR The given mode argument is not a supported mode.')
+  }
+
+  # do the grouping
+  grouped_dataset <- NULL
+  switch(mode,
+         none={
+           grouped_dataset <- no_grouping_(dataset)
+         },
+         speaker={
+           grouped_dataset <- group_by_speaker_(dataset, multiple_periods)
+         },
+         party={
+           grouped_dataset <- group_by_party_(dataset, multiple_periods)
+         }
+  )
+
+  # check whether the filtered dataset still has the valid shape, which is same as input dataset in this case
+  output_required_colnames <- c('ID', 'Speech')
+
+  if (! is.data.frame(grouped_dataset)) {
+    stop('ERROR The grouped dataset is not a data.frame object, which is required.')
+  } else if (ncol(grouped_dataset) != 2) {
+    stop('ERROR The grouped dataset does not have 12 columns as required.')
+  } else if (! all(colnames(grouped_dataset) == output_required_colnames)) {
+    stop('ERROR The grouped dataset does not have the required column names.')
+  }
+
+  return(grouped_dataset)
+}
+
 
 get_frequency_matrix <- function(dataset, sparse=0.999) {
   library(tm)
@@ -36,6 +188,14 @@ get_frequency_matrix <- function(dataset, sparse=0.999) {
   return(freq)
 }
 
+run_wordfish <- function(tdmat, repr_1, repr_2, name, tol=1e-7) {
+  source('utils/wordfish_1.3.r')
+
+  res <- wordfish(tdmat, dir=c(repr_1, repr_2), tol=tol)
+  serialize_results_text(paste0('data/', name, '.txt'), res)
+  return(res)
+}
+
 serialize_results_text <- function(filepath, obj) {
   f <- file(filepath, 'w+')
   serialize(connection=f, object=obj, ascii=TRUE)
@@ -47,94 +207,4 @@ unserialize_results_text <- function(filepath) {
   ret <- unserialize(f)
   close(f)
   return(ret)
-}
-
-get_only_coal_segments <- function(dataset, words_around) {
-  library(stringr)
-  cut_speeches <- dataset
-  for (j in seq(1, nrow(dataset))) {
-    positions <- str_locate_all(dataset$Speech[j], '(K|k)ohle')[[1]]
-    positions[,'start'] <- positions[,'start'] - words_around
-    positions[,'end'] <- positions[,'end'] + words_around
-
-    for (i in seq(1, nrow(positions))) {
-      positions[i, 'start'] <- max(positions[i, 'start'], 0)
-      positions[i, 'end'] <- min(positions[i, 'end'], nchar(dataset$Speech[j]))
-
-      while (substring(dataset$Speech[j], positions[i, 'start'], positions[i, 'start']) != ' ') {
-        if (positions[i, 'start'] == 0) {
-          break
-        }
-        positions[i, 'start'] <- positions[i, 'start'] - 1
-      }
-      while (substring(dataset$Speech[j], positions[i, 'end'], positions[i, 'end']) != ' ') {
-        if (positions[i, 'end'] == nchar(dataset$Speech[j])) {
-          break
-        }
-        positions[i, 'end'] <- positions[i, 'end'] + 1
-      }
-      if ((positions[i, 'start'] == 0) || (positions[i, 'end'] == nchar(dataset$Speech[j]))) {
-        next
-      }
-      positions[i, 'start'] <- positions[i, 'start'] + 1
-      positions[i, 'end'] <- positions[i, 'end'] - 1
-    }
-
-    found_matches <- TRUE
-    while(found_matches){
-      valids <- NULL
-      found_matches <- FALSE
-      if (nrow(positions) == 1) {
-        break
-      }
-      for (i in seq(1, nrow(positions) - 1)) {
-        if (positions[i, 'end'] >= positions[i+1, 'start']) {
-          found_matches <- TRUE
-          positions[i, 'end'] <- positions[i+1, 'end']
-          positions[i+1, 'start'] <- 0
-          positions[i+1, 'end'] <- 0
-        } else if (sum(positions[i]) == 0) {
-          valids <- append(valids, FALSE)
-          next
-        }
-        valids <- append(valids, TRUE)
-      }
-      valids <- append(valids, sum(positions[nrow(positions)]) != 0)
-      positions <- matrix(positions[valids,], ncol=2)
-      colnames(positions) <- c('start', 'end')
-    }
-
-    new_speech <- ''
-    for (i in seq(1, nrow(positions))) {
-      if (new_speech == '') {
-        new_speech <- paste0(new_speech, substr(dataset$Speech[j], positions[i, 'start'], positions[i, 'end']))
-      } else {
-        new_speech <- paste(new_speech, substr(dataset$Speech[j], positions[i, 'start'], positions[i, 'end']))
-      }
-    }
-    cut_speeches$Speech[j] <- new_speech
-  }
-  return(cut_speeches)
-}
-
-remove_parliament_president<- function(dataset) {
-  library(hash)
-  # define all the presidents of the Bundestag
-  presidents <- hash('Dr. Erich Köhler'=c(1), 'Dr. Hermann Ehlers'=c(1, 2), 'Dr. Eugen Gerstenmaier'=c(2, 3, 4, 5),
-                     'Kai-Uwe Hassel'=c(5, 6), 'Dr. Annemarie Renger'=c(7), 'Dr. Karl Carstens (Fehmarn)'=c(8),
-                     'Richard Stücklen'=c(8, 9), 'Dr. Rainer Barzel'=c(10), 'Dr. Philipp Jenninger'=c(10, 11),
-                     'Dr. Rita Süssmuth'=c(11, 12, 13), 'Dr. h.c. Wolfgang Thierse'=c(14, 15),
-                     'Dr. Norbert Lammert'=c(16, 17, 18), 'Dr. Wolfgang Schäuble'=c(19))
-  # get only those speeches made by someone that was president at some point
-  pres_only_speeches <- dataset[dataset$Speaker %in% keys(presidents),]
-  # take only those speeches made while the speaker was actually the president
-  actually_president <- data.frame()
-  for (i in seq(1, nrow(pres_only_speeches))) {
-    if (pres_only_speeches$Period[i] %in% values(presidents, keys=pres_only_speeches$Speaker[i])) {
-      actually_president <- rbind(actually_president, pres_only_speeches[i,])
-    }
-  }
-  # remove those speeches from the original dataset and return
-  result <- rbind(dataset, actually_president)
-  return(result[!duplicated(result,fromLast = FALSE)&!duplicated(result,fromLast = TRUE),])
 }

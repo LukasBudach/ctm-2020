@@ -73,6 +73,18 @@ dev.off()
 
 
 data <- read_speeches('data/database_export_search_89.csv')
-data <- filter(data, 'p', min_period=5, max_period=7)
+data <- filter(data, 'p', min_period=17, max_period=19)
+
+n_data <- filter(data, 'nc', chars_around=50)
+c_data <- filter(data, 'co', chars_around=50)
+pres <- filter(data, 'np')
+data <- filter(data, 'cc', threshold=3)
 data <- filter(data, 'cp', threshold=0.06)
 data <- group_speeches(data, 'none', 'TRUE')
+
+res_gt <- unserialize_results_text('data/party_p_17_19_nc_100_green18_cdu18.txt')
+res_all <- unserialize_results_text('data/party_p_17_19_green18_cdu18.txt')
+
+res_all$documents[,'omega'] = res_all$documents[,'omega'] - res_gt$documents[,'omega']
+
+party_speeches_by_party(raw=data, res=res_all, filename='data/test_diff.png', TRUE)

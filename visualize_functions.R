@@ -30,7 +30,6 @@ speeches_by_party <- function(raw, res, filename) {
   dev.off()
 }
 
-
 speaker_speeches_by_party <- function(raw, res, filename) {
   plottable <- data.frame()
   colors <- data.frame("cducsu"="black", "fdp"="yellow", "gruene"="green", "spd"="orange", "afd"="blue", "linke"="red")
