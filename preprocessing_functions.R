@@ -21,13 +21,7 @@ read_speeches <- function(filepath) {
     return(read_csv(filepath, skip=1, col_names=col_names, col_types=cols))
 }
 
-filter_period <- function(dataset, period) {
-  return(dataset[dataset$Period == period,])
-}
 
-filter_period_range <- function(dataset, min, max) {
-  return(dataset[dataset$Period %in% seq(min, max), ])
-}
 
 get_frequency_matrix <- function(dataset, sparse=0.999) {
   library(tm)
@@ -42,42 +36,6 @@ get_frequency_matrix <- function(dataset, sparse=0.999) {
   return(freq)
 }
 
-concat_by_speaker <- function(dataset, multiple_periods=FALSE) {
-  if (multiple_periods) {
-    dataset$Speaker <- paste0(dataset$Speaker,'_',dataset$Period)
-  }
-  u_speakers <- unique(dataset$Speaker)
-  r_speeches <- data.frame()
-  for(speaker in u_speakers) {
-    speeches <- dataset$Speech[dataset$Speaker == speaker]
-    concat <- ''
-    for(speech in speeches) {
-      concat <- paste(concat, speech)
-    }
-    r_speeches <- rbind(r_speeches, list(speaker, concat))
-  }
-  colnames(r_speeches) <- c('ID', 'Speech')
-  return(r_speeches)
-}
-
-concat_by_party <- function(dataset, multiple_periods=FALSE) {
-  if (multiple_periods) {
-    dataset$Party <- paste0(dataset$Party, '_', dataset$Period)
-  }
-  u_parties <- unique(dataset$Party)
-  r_speeches <- data.frame()
-  for(party in u_parties) {
-    speeches <- dataset$Speech[dataset$Party == party]
-    concat <- ''
-    for(speech in speeches) {
-      concat <- paste(concat, speech)
-    }
-    r_speeches <- rbind(r_speeches, list(party, concat))
-  }
-  colnames(r_speeches) <- c('ID', 'Speech')
-  return(r_speeches)
-}
-
 serialize_results_text <- function(filepath, obj) {
   f <- file(filepath, 'w+')
   serialize(connection=f, object=obj, ascii=TRUE)
@@ -89,32 +47,6 @@ unserialize_results_text <- function(filepath) {
   ret <- unserialize(f)
   close(f)
   return(ret)
-}
-
-filter_coal_percentile <- function(dataset, min_percentage) {
-  library(stringr)
-
-  cts <- data.frame()
-  for(i in seq(1, nrow(dataset))) {
-    cts <- rbind(cts, list(dataset$SpeechDbId[i], sapply(strsplit(dataset$Speech[i], " "), length),
-                           str_count(dataset$Speech[i], 'K*k*ohle')))
-  }
-  colnames(cts) <- c('SpeechDbId', 'WordCount', 'CoalCount')
-
-  return(cts[cts$CoalCount / cts$WordCount >= min_percentage,])
-}
-
-filter_coal_count <- function(dataset, min_count) {
-  library(stringr)
-
-  cts <- data.frame()
-  for(i in seq(1, nrow(dataset))) {
-    cts <- rbind(cts, list(dataset$SpeechDbId[i], sapply(strsplit(dataset$Speech[i], " "), length),
-                           str_count(dataset$Speech[i], 'K*k*ohle')))
-  }
-  colnames(cts) <- c('SpeechDbId', 'WordCount', 'CoalCount')
-
-  return(cts[cts$CoalCount >= min_count,])
 }
 
 get_only_coal_segments <- function(dataset, words_around) {
@@ -171,6 +103,7 @@ get_only_coal_segments <- function(dataset, words_around) {
       positions <- matrix(positions[valids,], ncol=2)
       colnames(positions) <- c('start', 'end')
     }
+
     new_speech <- ''
     for (i in seq(1, nrow(positions))) {
       if (new_speech == '') {
@@ -182,4 +115,26 @@ get_only_coal_segments <- function(dataset, words_around) {
     cut_speeches$Speech[j] <- new_speech
   }
   return(cut_speeches)
+}
+
+remove_parliament_president<- function(dataset) {
+  library(hash)
+  # define all the presidents of the Bundestag
+  presidents <- hash('Dr. Erich Köhler'=c(1), 'Dr. Hermann Ehlers'=c(1, 2), 'Dr. Eugen Gerstenmaier'=c(2, 3, 4, 5),
+                     'Kai-Uwe Hassel'=c(5, 6), 'Dr. Annemarie Renger'=c(7), 'Dr. Karl Carstens (Fehmarn)'=c(8),
+                     'Richard Stücklen'=c(8, 9), 'Dr. Rainer Barzel'=c(10), 'Dr. Philipp Jenninger'=c(10, 11),
+                     'Dr. Rita Süssmuth'=c(11, 12, 13), 'Dr. h.c. Wolfgang Thierse'=c(14, 15),
+                     'Dr. Norbert Lammert'=c(16, 17, 18), 'Dr. Wolfgang Schäuble'=c(19))
+  # get only those speeches made by someone that was president at some point
+  pres_only_speeches <- dataset[dataset$Speaker %in% keys(presidents),]
+  # take only those speeches made while the speaker was actually the president
+  actually_president <- data.frame()
+  for (i in seq(1, nrow(pres_only_speeches))) {
+    if (pres_only_speeches$Period[i] %in% values(presidents, keys=pres_only_speeches$Speaker[i])) {
+      actually_president <- rbind(actually_president, pres_only_speeches[i,])
+    }
+  }
+  # remove those speeches from the original dataset and return
+  result <- rbind(dataset, actually_president)
+  return(result[!duplicated(result,fromLast = FALSE)&!duplicated(result,fromLast = TRUE),])
 }

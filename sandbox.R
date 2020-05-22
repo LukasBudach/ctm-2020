@@ -64,3 +64,15 @@ hist(k_count, breaks=br, include.lowest=FALSE, xlim=c(min(br), max(br)), xlab='N
      ylab='Number of Speeches', col='lightgray')
 abline(v=median(k_count), col='blue')
 dev.off()
+
+# library(XML)
+# paliamentarians <- xmlToDataFrame('data/german_parliamentarians.xml')
+# colnames(parliamentarians) <- c('Surname', 'SurnameAlt', 'FirstName', 'FirstNameAlt', 'Title', 'AcademicTitle',
+#                                 'RegionSpecifier', 'NobilityTitle', 'Prefix', 'FullName', 'Periods', 'ActiveCountry',
+#                                 '')
+
+
+data <- read_speeches('data/database_export_search_89.csv')
+data <- filter(data, 'p', min_period=5, max_period=7)
+data <- filter(data, 'cp', threshold=0.06)
+data <- group_speeches(data, 'none', 'TRUE')
