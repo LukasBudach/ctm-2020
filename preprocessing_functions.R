@@ -177,9 +177,11 @@ group_speeches <- function(dataset, mode, multiple_periods=FALSE) {
 
 get_frequency_matrix <- function(dataset, sparse=0.999) {
   library(tm)
-  corpus <- VCorpus(VectorSource(dataset$Speech))
+
+  corpus <- VCorpus(VectorSource(data$Speech))
   corpus <- tm_map(corpus, content_transformer(tolower)) # MAKES EVERYTHING LOWERCASE
   corpus <- tm_map(corpus, removeNumbers) # REMOVE NUMBERS
+  corpus <- tm_map(corpus, removePunctuation) # remove punctuation
   corpus <- tm_map(corpus, stripWhitespace) # REMOVE EXTRA WHITE SPACE
   freq_mat <- TermDocumentMatrix(corpus)
   sparce_mat <- removeSparseTerms(freq_mat, sparse)
