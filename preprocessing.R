@@ -73,6 +73,21 @@ res <- run_wordfish(tdmat=mat,
 # visualization
 draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_17_19_Kießling_Roth.png')
 
+# run wordfish for period 19 without any specific filtering, grouped by speaker
+data <- read_speeches('data/database_export_search_89.csv')
+data <- filter(data, 'p', min_period=19, max_period=19)           # filter to period 17-19
+visualization_copy <- data
+data <- group_speeches(data, 'speaker')   # group the speeches by their speaker
+mat <- get_frequency_matrix(data, sparse=0.9999)
+res <- run_wordfish(tdmat=mat,
+                    repr_1=72, # representative for position 1
+                    repr_2=163, # representative for position 2
+                    name='speaker_p_19_Hofreiter_Hollnagel',
+                    tol=1e-7)
+# visualization
+speaker_speeches_by_party(raw=visualization_copy, res=res, filename='data/speaker_p_19_Hofreiter_Hollnagel.png')
+draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_19_Hofreiter_Hollnagel_words.png')
+
 
 # run wordfish for periods 17-19 on only the text surrounding coal, grouped by party
 data <- read_speeches('data/database_export_search_89.csv')
@@ -99,13 +114,13 @@ visualization_copy <- data
 data <- group_speeches(data, 'speaker', multiple_periods=TRUE) # group the speeches by their speaker
 mat <- get_frequency_matrix(data, sparse=0.9999)
 res <- run_wordfish(tdmat=mat,
-                    repr_1=72, # representative for position 1
-                    repr_2=163, # representative for position 2
-                    name='speaker_p_17_19_co_200_Hofreiter_Hollnagel',
+                    repr_1=164, # representative for position 1
+                    repr_2=188, # representative for position 2
+                    name='speaker_p_17_19_co_200_Hofreiter18_Laemmel18',
                     tol=1e-7)
 # visualization
-speaker_speeches_by_party(raw=visualization_copy, res=res, filename='data/speaker_p_17_19_co_200_Hofreiter_Hollnagel.png', TRUE)
-draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_17_19_co_200_Hofreiter_Hollnagel_words.png')
+speaker_speeches_by_party(raw=visualization_copy, res=res, filename='data/speaker_p_17_19_co_200_Hofreiter18_Laemmel18.png', TRUE)
+draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_17_19_co_200_Hofreiter18_Laemmel18_words.png')
 
 
 # run wordfish for periods 17-19 on only the text that doesn't include coal, grouped by party
