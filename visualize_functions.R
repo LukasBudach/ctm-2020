@@ -30,30 +30,84 @@ speeches_by_party <- function(raw, res, filename) {
   dev.off()
 }
 
-speaker_speeches_by_party <- function(raw, res, filename) {
+speaker_speeches_by_party <- function(raw, res, filename, multiple_periods=FALSE) {
   plottable <- data.frame()
   colors <- data.frame("cducsu"="black", "fdp"="yellow", "gruene"="green", "spd"="orange", "afd"="blue", "linke"="red")
-  for(i in rownames(res$documents)) {
-    if (is.na(i)) {
-      next
+
+  indices_no_period <- c()
+  periods <- c()
+  if (multiple_periods) {
+    for (el in rownames(res$documents)) {
+      indices_no_period <- append(indices_no_period, trimws(strsplit(el, "_")[[1]][1]))
+      periods <- append(periods, trimws(strsplit(el, "_")[[1]][2]))
     }
-    party <- unique(raw$Party[raw$Speaker == i])
+  } else {
+    indices_no_period <- rownames(res$documents)
+  }
+
+  #for(i in rownames(res$documents)) {
+  #  if (is.na(i)) {
+  #    next
+  #  }
+  #  party <- unique(raw$Party[raw$Speaker == i])
+  #  if (is.na(party)) {
+  #    next
+  #  }
+  #  plottable <- rbind(plottable, list(i, res$documents[as.String(i), 'omega'], colors[[party]]))
+  #}
+  #colnames(plottable) <- c('speaker', 'position', 'color')
+
+
+
+  for(i in seq(1, length(indices_no_period))) {
+    party <- unique(raw$Party[raw$Speaker == indices_no_period[i]])
     if (is.na(party)) {
       next
     }
-    plottable <- rbind(plottable, list(i, res$documents[as.String(i), 'omega'], colors[[party]]))
+    if (! party %in% colnames(colors)) {
+      next
+    }
+    if (multiple_periods) {
+      plottable <- rbind(plottable, list(i, periods[i], res$documents[i, 'omega'], colors[[party]]))
+    } else {
+      plottable <- rbind(plottable, list(i, 1, res$documents[i, 'omega'], colors[[party]]))
+    }
   }
-  colnames(plottable) <- c('speaker', 'position', 'color')
+  colnames(plottable) <- c('speaker', 'period', 'position', 'color')
 
-  png(filename=filename, width=600, height=600)
-  plot(plottable$position, col=plottable$color)
-  legend(x='topleft', legend=colnames(colors), col=as.character(colors[,]), pch=1)
-  abline(h=mean(plottable$position[plottable$color == 'black']), col='black')
-  abline(h=mean(plottable$position[plottable$color == 'yellow']), col='yellow')
-  abline(h=mean(plottable$position[plottable$color == 'green']), col='green')
-  abline(h=mean(plottable$position[plottable$color == 'orange']), col='orange')
-  abline(h=mean(plottable$position[plottable$color == 'blue']), col='blue')
-  abline(h=mean(plottable$position[plottable$color == 'red']), col='red')
+  if (multiple_periods) {
+    means <- data.frame()
+    u_periods <- unique(plottable$period)
+    u_colors <- unique(plottable$color)
+    for (col in u_colors) {
+      for (p in u_periods) {
+        means <- rbind(means, list(col, p, mean(plottable$position[(plottable$color == col) & (plottable$period == p)])))
+      }
+    }
+    colnames(means) <- c('color', 'period', 'mean_pos')
+  }
+
+  png(filename=filename, width=1200, height=1200)
+  par(oma = c(3.5, 1, 1, 1))
+  if (multiple_periods) {
+    plot(x=plottable$period, y=plottable$position, col=plottable$color, xlab='parliamentary period',
+         ylab='position regarding coal')
+    for (color in u_colors) {
+      lines(x=u_periods, y=means$mean_pos[means$color == color], col=color)
+      points(x=u_periods, y=means$mean_pos[means$color == color], col=color, pch=15, cex=1.5)
+    }
+  } else {
+    plot(plottable$position, col=plottable$color, xlab='parliamentary period', ylab='position regarding coal')
+    abline(h=mean(plottable$position[plottable$color == 'black']), col='black')
+    abline(h=mean(plottable$position[plottable$color == 'yellow']), col='yellow')
+    abline(h=mean(plottable$position[plottable$color == 'green']), col='green')
+    abline(h=mean(plottable$position[plottable$color == 'orange']), col='orange')
+    abline(h=mean(plottable$position[plottable$color == 'blue']), col='blue')
+    abline(h=mean(plottable$position[plottable$color == 'red']), col='red')
+  }
+  par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+  legend('bottom', legend=colnames(colors), col=as.character(colors[,]), pch=1, xpd=TRUE, bty='n', inset=c(0,0),
+         horiz=TRUE)
   dev.off()
 }
 
@@ -89,12 +143,6 @@ party_speeches_by_party <- function(raw, res, filename, multiple_periods=FALSE) 
   plot(x=plottable$period, y=plottable$position, col=plottable$color)
   par(mar = c(5,4,4,8))
   legend(x='right', legend=colnames(colors), col=as.character(colors[,]), pch=1)
-  #abline(h=mean(plottable$position[plottable$color == 'black']), col='black')
-  #abline(h=mean(plottable$position[plottable$color == 'yellow']), col='yellow')
-  #abline(h=mean(plottable$position[plottable$color == 'green']), col='green')
-  #abline(h=mean(plottable$position[plottable$color == 'orange']), col='orange')
-  #abline(h=mean(plottable$position[plottable$color == 'blue']), col='blue')
-  #abline(h=mean(plottable$position[plottable$color == 'red']), col='red')
   dev.off()
 }
 
