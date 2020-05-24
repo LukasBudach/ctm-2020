@@ -82,9 +82,29 @@ data <- filter(data, 'cc', threshold=3)
 data <- filter(data, 'cp', threshold=0.06)
 data <- group_speeches(data, 'none', 'TRUE')
 
-res_gt <- unserialize_results_text('data/party_p_17_19_nc_100_green18_cdu18.txt')
+res_gt <- unserialize_results_text('data/party_p_17_19_nc_300_green18_cdu18.txt')
 res_all <- unserialize_results_text('data/party_p_17_19_green18_cdu18.txt')
 
 res_all$documents[,'omega'] = res_all$documents[,'omega'] - res_gt$documents[,'omega']
 
-party_speeches_by_party(raw=data, res=res_all, filename='data/test_diff.png', TRUE)
+party_speeches_by_party(raw=data, res=res_all, filename='data/party_p17_19_green18_cdu18_diff_all_nc_300.png', TRUE)
+
+library(stringr)
+words <- strsplit(data$Speech, ' ')
+w_len <- NULL
+for(el in words) {
+  w_len <- append(w_len, nchar(el))
+}
+
+hist(w_len)
+mean(w_len)
+
+library(tm)
+removeSpecialChars <- function(x) gsub("[^a-zA-Z0-9 ]","",x)
+
+corpus <- VCorpus(VectorSource(data$Speech))
+corpus <- tm_map(corpus, content_transformer(tolower)) # MAKES EVERYTHING LOWERCASE
+corpus <- tm_map(corpus, removeNumbers) # REMOVE NUMBERS
+corpus <- tm_map(corpus, stripWhitespace) # REMOVE EXTRA WHITE SPACE
+freq_mat <- TermDocumentMatrix(corpus)
+sparce_mat <- removeSparseTerms(freq_mat, sparse)
