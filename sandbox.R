@@ -82,12 +82,12 @@ data <- filter(data, 'cc', threshold=3)
 data <- filter(data, 'cp', threshold=0.06)
 data <- group_speeches(data, 'none', 'TRUE')
 
-res_gt <- unserialize_results_text('data/party_p_17_19_nc_300_green18_cdu18.txt')
+res_gt <- unserialize_results_text('data/party_p_17_19_nc_150_green18_cdu18.txt')
 res_all <- unserialize_results_text('data/party_p_17_19_green18_cdu18.txt')
 
 res_all$documents[,'omega'] = res_all$documents[,'omega'] - res_gt$documents[,'omega']
 
-party_speeches_by_party(raw=data, res=res_all, filename='data/party_p17_19_green18_cdu18_diff_all_nc_300.png', TRUE)
+party_speeches_by_party(raw=data, res=res_all, filename='data/party_p17_19_green18_cdu18_diff_all_nc_150.png', TRUE)
 
 library(stringr)
 words <- strsplit(data$Speech, ' ')
@@ -99,12 +99,44 @@ for(el in words) {
 hist(w_len)
 mean(w_len)
 
-library(tm)
-removeSpecialChars <- function(x) gsub("[^a-zA-Z0-9 ]","",x)
+removeSpecialChars <- function(x) return (gsub("[^a-zA-Z0-9 ]","",x))
 
-corpus <- VCorpus(VectorSource(data$Speech))
+library(tm)
+library(SnowballC)
+
+stem_speech <- function(x) {
+  words <- strsplit(x, ' ')[[1]]
+  words <- wordStem(words, language='german')
+  return(paste(words, collapse=' '))
+}
+
+data <- read_speeches('data/database_export_search_89.csv')
+data <- filter(data, 'p', min_period=17, max_period=19)
+
+corpus <- VCorpus(VectorSource(data$Speech), readerControl=list(language='ger'))
 corpus <- tm_map(corpus, content_transformer(tolower)) # MAKES EVERYTHING LOWERCASE
 corpus <- tm_map(corpus, removeNumbers) # REMOVE NUMBERS
 corpus <- tm_map(corpus, stripWhitespace) # REMOVE EXTRA WHITE SPACE
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, content_transformer(gsub), pattern="[^a-zA-Z0-9äöüß ]", replacement='')
+
+# corpus <- tm_map(corpus, stemDocument, language='german')
+corpus <- tm_map(corpus, content_transformer(stem_speech))
+
 freq_mat <- TermDocumentMatrix(corpus)
-sparce_mat <- removeSparseTerms(freq_mat, sparse)
+sparce_mat <- removeSparseTerms(freq_mat, 0.9999)
+
+
+library(SnowballC)
+
+getStemLanguages()
+stem
+
+x <- 'Ich schaltete ab, abschaltete und abschaltet'
+
+test <- paste(words, collapse=' ')
+
+stem_speech('Ich schaltete ab, abschaltete und abschaltet')
+
+wordStem(c('Ich', 'schaltete', 'ab', 'abschaltete', 'und', 'abschaltet'), language='german')
+

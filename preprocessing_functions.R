@@ -175,16 +175,27 @@ group_speeches <- function(dataset, mode, multiple_periods=FALSE) {
 }
 
 
-get_frequency_matrix <- function(dataset, sparse=0.999) {
+get_frequency_matrix <- function(dataset, stem_speeches=FALSE, sparse=0.999) {
   library(tm)
+  library(SnowballC)
 
-  corpus <- VCorpus(VectorSource(data$Speech))
+  stem_speech <- function(x) {
+    words <- strsplit(x, ' ')[[1]]
+    words <- wordStem(words, language='german')
+    return(paste(words, collapse=' '))
+  }
+
+  corpus <- VCorpus(VectorSource(data$Speech), readerControl=list(language='ger'))
   corpus <- tm_map(corpus, content_transformer(tolower)) # MAKES EVERYTHING LOWERCASE
   corpus <- tm_map(corpus, removeNumbers) # REMOVE NUMBERS
-  corpus <- tm_map(corpus, removePunctuation) # remove punctuation
   corpus <- tm_map(corpus, stripWhitespace) # REMOVE EXTRA WHITE SPACE
+  corpus <- tm_map(corpus, removePunctuation)
+  corpus <- tm_map(corpus, content_transformer(gsub), pattern="[^a-zA-Z0-9äöüß ]", replacement='')
+  if (stem_speeches) {
+    corpus <- tm_map(corpus, content_transformer(stem_speech))
+  }
   freq_mat <- TermDocumentMatrix(corpus)
-  sparce_mat <- removeSparseTerms(freq_mat, sparse)
+  sparce_mat <- removeSparseTerms(freq_mat, 0.9999)
   freq <- as.matrix(sparce_mat)
   colnames(freq) <- dataset$ID
   return(freq)
