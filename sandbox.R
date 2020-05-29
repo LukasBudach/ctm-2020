@@ -139,4 +139,3 @@ test <- paste(words, collapse=' ')
 stem_speech('Ich schaltete ab, abschaltete und abschaltet')
 
 wordStem(c('Ich', 'schaltete', 'ab', 'abschaltete', 'und', 'abschaltet'), language='german')
-
