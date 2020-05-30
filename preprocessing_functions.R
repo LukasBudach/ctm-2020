@@ -176,6 +176,7 @@ group_speeches <- function(dataset, mode, multiple_periods=FALSE) {
 
 
 stem_speech <- function(x) {
+  library(SnowballC)
   words <- strsplit(x, ' ')[[1]]
   words <- wordStem(words, language='german')
   return(paste(words, collapse=' '))
@@ -183,7 +184,6 @@ stem_speech <- function(x) {
 
 get_frequency_matrix <- function(dataset, stem_speeches=FALSE, sparse=0.999) {
   library(tm)
-  library(SnowballC)
 
   corpus <- VCorpus(VectorSource(data$Speech), readerControl=list(language='ger'))
   corpus <- tm_map(corpus, removeNumbers) # REMOVE NUMBERS
