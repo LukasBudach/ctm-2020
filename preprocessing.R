@@ -75,18 +75,18 @@ draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_17_19_Kießling_Roth
 
 # run wordfish for period 19 without any specific filtering, grouped by speaker
 data <- read_speeches('data/database_export_search_89.csv')
-data <- filter(data, 'p', min_period=19, max_period=19)           # filter to period 17-19
+data <- filter(data, 'p', min_period=17, max_period=19)           # filter to period 17-19
 visualization_copy <- data
-data <- group_speeches(data, 'speaker')   # group the speeches by their speaker
+data <- group_speeches(data, 'speaker', multiple_periods=TRUE)   # group the speeches by their speaker
 mat <- get_frequency_matrix(data, sparse=0.9999)
 res <- run_wordfish(tdmat=mat,
-                    repr_1=72, # representative for position 1
-                    repr_2=163, # representative for position 2
-                    name='speaker_p_19_Hofreiter_Hollnagel',
+                    repr_1=164, # representative for position 1
+                    repr_2=188, # representative for position 2
+                    name='speaker_p_17_19_Hofreiter18_Laemmel18',
                     tol=1e-7)
 # visualization
-speaker_speeches_by_party(raw=visualization_copy, res=res, filename='data/speaker_p_19_Hofreiter_Hollnagel.png')
-draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_19_Hofreiter_Hollnagel_words.png')
+speaker_speeches_by_party(raw=visualization_copy, res=res, filename='data/speaker_p_17_19_Hofreiter18_Laemmel18.png', multiple_periods=TRUE)
+draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_17_19_Hofreiter18_Laemmel18_words.png')
 
 
 # run wordfish for periods 17-19 on only the text surrounding coal, grouped by party
@@ -126,18 +126,18 @@ draw_eiffel_tower_diagram(res=res, filename='data/party_p_13_16_co_300_green13_c
 # run wordfish for periods 17-19 on only the text that doesn't include coal, grouped by party
 data <- read_speeches('data/database_export_search_89.csv')
 data <- filter(data, 'p', min_period=17, max_period=19)         # filter to period 17-19
-data <- filter(data, 'nc', chars_around=150)                    # filter speeches to exclude a 100 character space around the keyword coal
+data <- filter(data, 'nc', chars_around=100)                    # filter speeches to exclude a 100 character space around the keyword coal
 visualization_copy <- data
-data <- group_speeches(data, 'party', multiple_periods=TRUE)   # group the speeches by their party
+data <- group_speeches(data, 'speaker', multiple_periods=TRUE)   # group the speeches by their party
 mat <- get_frequency_matrix(data, sparse=0.9999)
 res <- run_wordfish(tdmat=mat,
-                    repr_1=7, # representative for position 1
-                    repr_2=9, # representative for position 2
-                    name='party_p_17_19_nc_150_green18_cdu18',
+                    repr_1=164, # representative for position 1
+                    repr_2=188, # representative for position 2
+                    name='speaker_p_17_19_nc_100_Hofreiter18_Laemmel18',
                     tol=1e-7)
 # visualization
-party_speeches_by_party(raw=visualization_copy, res=res, filename='data/party_p_17_19_nc_150_green18_cdu18.png', multiple_periods=TRUE)
-draw_eiffel_tower_diagram(res=res, filename='data/party_p_17_19_nc_150_green18_cdu18_words.png')
+speaker_speeches_by_party(raw=visualization_copy, res=res, filename='data/speaker_p_17_19_nc_100_Hofreiter18_Laemmel18.png', multiple_periods=TRUE)
+draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_17_19_nc_100_Hofreiter18_Laemmel18_words.png')
 
 
 # run wordfish for periods 17-19 on only the text surrounding coal and having remove the parliament president, grouped by party
