@@ -6,10 +6,10 @@
 # only needs to be executed once, as the dictionary of positive/negative words does not need to change
 dictionaryGerman <- get_sentiment_dictionary()
 
-data <- read_speeches('data/database_export_search_89.csv')
-data <- filter(data, 'p', min_period=19, max_period=19)
-data <- group_speeches(data, 'none', multiple_periods=TRUE)
-# data <- data[nchar(data$Speech) < 1000,]
+data2 <- read_speeches('data/database_export_search_89.csv')
+data2 <- filter(data, 'p', min_period=19, max_period=19)
+data2 <- group_speeches(data, 'none', multiple_periods=TRUE)
+#data <- data[nchar(data$Speech) < 1000,]
 
 data$SpeechStem <- get_stemmed_speeches(data)
 
