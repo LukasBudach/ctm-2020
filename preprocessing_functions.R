@@ -193,7 +193,7 @@ get_frequency_matrix <- function(dataset, stem_speeches=FALSE, sparse=0.999) {
   if (stem_speeches) {
     corpus <- tm_map(corpus, content_transformer(stem_speech))
   } else {
-    # corpus <- tm_map(corpus, content_transformer(tolower)) # MAKES EVERYTHING LOWERCASE
+    corpus <- tm_map(corpus, content_transformer(tolower)) # MAKES EVERYTHING LOWERCASE
   }
   freq_mat <- TermDocumentMatrix(corpus, control=list(tolower=FALSE))
   sparce_mat <- removeSparseTerms(freq_mat, 0.9999)

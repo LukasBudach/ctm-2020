@@ -139,3 +139,13 @@ test <- paste(words, collapse=' ')
 stem_speech('Ich schaltete ab, abschaltete und abschaltet')
 
 wordStem(c('Ich', 'schaltete', 'ab', 'abschaltete', 'und', 'abschaltet'), language='german')
+
+data <- read_speeches('data/database_export_search_89.csv')
+data <- filter(data, 'p', min_period=17, max_period=19)
+res_gt <- unserialize_results_text('data/speaker_p_17_19_nc_100_Hofreiter18_Laemmel18.txt')
+res_all <- unserialize_results_text('data/speaker_p_17_19_Hofreiter18_Laemmel18.txt')
+
+res_all$documents[,'omega'] = res_all$documents[,'omega'] - res_gt$documents[,'omega']
+
+speaker_speeches_by_party(raw=data, res=res_all, filename='data/speaker_p17_19_Hofreiter18_Laemmel18_diff_all_nc_100.png', TRUE)
+
