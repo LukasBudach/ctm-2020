@@ -105,13 +105,8 @@ filter_non_coal_segments_ <- function(dataset, chars_around) {
 }
 
 filter_non_parliament_president_speaker_<- function(dataset) {
-  library(hash)
   # define all the presidents of the Bundestag
-  presidents <- hash('Dr. Erich Köhler'=c(1), 'Dr. Hermann Ehlers'=c(1, 2), 'Dr. Eugen Gerstenmaier'=c(2, 3, 4, 5),
-                     'Kai-Uwe Hassel'=c(5, 6), 'Dr. Annemarie Renger'=c(7), 'Dr. Karl Carstens (Fehmarn)'=c(8),
-                     'Richard Stücklen'=c(8, 9), 'Dr. Rainer Barzel'=c(10), 'Dr. Philipp Jenninger'=c(10, 11),
-                     'Dr. Rita Süssmuth'=c(11, 12, 13), 'Dr. h.c. Wolfgang Thierse'=c(14, 15),
-                     'Dr. Norbert Lammert'=c(16, 17, 18), 'Dr. Wolfgang Schäuble'=c(19))
+  presidents <- get_presidents_map()
   # get only those speeches made by someone that was president at some point
   pres_only_speeches <- dataset[dataset$Speaker %in% keys(presidents),]
   # take only those speeches made while the speaker was actually the president

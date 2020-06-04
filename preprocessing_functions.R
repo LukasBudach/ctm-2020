@@ -33,6 +33,7 @@ read_speeches <- function(filepath) {
 #           co -> filter, keeping only parts of speeches that are within the chars_around area around an occurence of coal in the text
 #           nc -> filter, keeping only parts of speeches that are NOT within the chars_around area around an occurence of coal in the text
 #           np -> filter, removing all speeches by the Bundestagspräsident(en) in the dataset
+#           vp -> filter, removing the vocabulary the Bundestagspräsident(en) in the dataset used
 #
 #   returns the resulting data as data.frame with the same columns as the input (but likely less rows!)
 
@@ -41,7 +42,7 @@ filter <- function(dataset, mode, min_period=NULL, max_period=NULL, threshold=NU
   # perform input argument validation:
   required_colnames <- c('Index', 'SpeechDbId', 'Date', 'Period', 'Sitting', 'DocDbId', 'Speaker', 'Party',
                          'InterjectionCount', 'InterjectionContent', 'ParagraphCount', 'Speech')
-  valid_modes <- c('p', 'cc', 'cp', 'co', 'nc', 'np')
+  valid_modes <- c('p', 'cc', 'cp', 'co', 'nc', 'np', 'vp')
 
   # validate dataset
   if (! is.data.frame(dataset)) {
@@ -87,8 +88,11 @@ filter <- function(dataset, mode, min_period=NULL, max_period=NULL, threshold=NU
          nc={ # only keep those parts of each speech, that are not in proximity to a word containing Kohle or kohle
            filtered_dataset <- filter_non_coal_segments_(dataset, chars_around)
          },
-         np= { # only keep the speeches made by speakers that were not Bundestagspräsident at the time of the speech
+         np={ # only keep the speeches made by speakers that were not Bundestagspräsident at the time of the speech
            filtered_dataset <- filter_non_parliament_president_speaker_(dataset)
+         },
+         vp={ # remove the vocabulary that is used by the Bundestagspräsident(en) in the dataset from all the speeches
+           filtered_dataset <- filter_remove_president_vocabulary_(dataset)
          }
   )
 
@@ -189,14 +193,14 @@ get_frequency_matrix <- function(dataset, stem_speeches=FALSE, sparse=0.999) {
   corpus <- tm_map(corpus, removeNumbers) # REMOVE NUMBERS
   corpus <- tm_map(corpus, stripWhitespace) # REMOVE EXTRA WHITE SPACE
   corpus <- tm_map(corpus, removePunctuation)
-  corpus <- tm_map(corpus, content_transformer(gsub), pattern="[^a-zA-Z0-9äöüß ]", replacement='')
+  corpus <- tm_map(corpus, content_transformer(gsub), pattern="[^a-zA-Z0-9äöüÄÖÜß ]", replacement='')
   if (stem_speeches) {
     corpus <- tm_map(corpus, content_transformer(stem_speech))
   } else {
     corpus <- tm_map(corpus, content_transformer(tolower)) # MAKES EVERYTHING LOWERCASE
   }
   freq_mat <- TermDocumentMatrix(corpus, control=list(tolower=FALSE))
-  sparce_mat <- removeSparseTerms(freq_mat, 0.9999)
+  sparce_mat <- removeSparseTerms(freq_mat, sparse)
   freq <- as.matrix(sparce_mat)
   colnames(freq) <- dataset$ID
   return(freq)
@@ -221,4 +225,61 @@ unserialize_results_text <- function(filepath) {
   ret <- unserialize(f)
   close(f)
   return(ret)
+}
+
+filter_remove_president_vocabulary_ <- function(dataset) {
+  library(tm)
+  library(stringr)
+
+  # define all the presidents of the Bundestag
+  presidents <- get_presidents_map()
+  # get only those speeches made by someone that was president at some point
+  pres_only_speeches <- dataset[dataset$Speaker %in% keys(presidents),]
+  # take only those speeches made while the speaker was actually the president
+  actually_president <- data.frame()
+  for (i in seq(1, nrow(pres_only_speeches))) {
+    if (pres_only_speeches$Period[i] %in% values(presidents, keys=pres_only_speeches$Speaker[i])) {
+      actually_president <- rbind(actually_president, pres_only_speeches[i,])
+    }
+  }
+
+  # process the speeches, removing numbers, extra white space and special characters
+  corpus <- VCorpus(VectorSource(actually_president$Speech), readerControl=list(language='ger'))
+  corpus <- tm_map(corpus, removeNumbers) # REMOVE NUMBERS
+  corpus <- tm_map(corpus, removePunctuation)
+  corpus <- tm_map(corpus, content_transformer(gsub), pattern='[^a-zA-Z0-9äöüÄÖÜß ]', replacement='')
+  corpus <- tm_map(corpus, stripWhitespace) # REMOVE EXTRA WHITE SPACE
+
+  actually_president$Speech <- sapply(corpus, as.character)
+
+  speeches_split <- strsplit(actually_president$Speech, ' ')
+  vocabulary <- c()
+  for (el in speeches_split) {
+    vocabulary <- append(vocabulary, unique(el))
+  }
+  vocabulary <- unique(vocabulary)
+  vocabulary <- vocabulary[nchar(vocabulary) > 1]
+  vocabulary <- vocabulary[str_count(vocabulary, '(K|k)ohle') == 0]
+
+  corpus2 <- VCorpus(VectorSource(dataset$Speech), readerControl=list(language='ger'))
+  corpus2 <- tm_map(corpus2, removeNumbers) # REMOVE NUMBERS
+  corpus2 <- tm_map(corpus2, removePunctuation)
+  corpus2 <- tm_map(corpus2, content_transformer(gsub), pattern='[^a-zA-Z0-9äöüÄÖÜß ]', replacement='')
+  corpus2 <- tm_map(corpus2, stripWhitespace) # REMOVE EXTRA WHITE SPACE
+
+  speeches <- sapply(corpus2, as.character)
+  speeches_cleansed <- c()
+
+  pb <- txtProgressBar(min=1, max=length(speeches), initial=1)
+  ctr <- 0
+  for (speech in speeches) {
+    speech_vector <- strsplit(speech, ' ')[[1]]
+    speech_cleansed <- speech_vector[! speech_vector %in% vocabulary]
+    speeches_cleansed <- append(speeches_cleansed, paste(speech_cleansed, collapse = ' '))
+    ctr <- ctr + 1
+    setTxtProgressBar(pb, ctr)
+  }
+
+  dataset$Speech = speeches_cleansed
+  return(dataset)
 }
