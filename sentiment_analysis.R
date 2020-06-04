@@ -17,3 +17,6 @@ library(SentimentAnalysis)
 data$Sentiment <- analyzeSentiment(data$SpeechStem, language='german', rules=list('GermanSentiment'=list(ruleLinearModel, dictionaryGerman)))$GermanSentiment
 
 data <- data[(data$Sentiment <= quantile(data$Sentiment, 0.05)) | (data$Sentiment >= quantile(data$Sentiment, 0.95)),]
+
+topic_scores <- read_topic_scores('data/topic_scores_Kohle.csv')
+data <- calculate_total_sentiment(topic_scores)
