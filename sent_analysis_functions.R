@@ -111,3 +111,23 @@ calculate_total_sentiment <- function (topic_scores){
   }
   return(data)
 }
+
+calculate_pro_coal_sentiment <- function (topic_scores){
+  pro_coal_topics <- (topic_scores$EuropeanCoalAndSteelCommunity + topic_scores$HardCoalSubsidies + topic_scores$JobMarket + topic_scores$NaturalResources)/4
+
+  for (i in seq(1, nrow(data))) {
+    row_number <- which(topic_scores$SpeechDbId == data$ID[i])
+    data$ProCoalSentiment[i] <- data$Sentiment[i] * pro_coal_topics[row_number]
+  }
+  return(data)
+}
+
+calculate_anti_coal_sentiment <- function (topic_scores){
+  anti_coal_topics <- (topic_scores$ClimateProtection + topic_scores$EnergySupplyMix + topic_scores$EnergyTransitionAndPowerMarket + topic_scores$EnvironmentalProtection + topic_scores$GreenPolicies + topic_scores$SubsidyReduction)/6
+
+  for (i in seq(1, nrow(data))) {
+    row_number <- which(topic_scores$SpeechDbId == data$ID[i])
+    data$AntiCoalSentiment[i] <- data$Sentiment[i] * anti_coal_topics[row_number]
+  }
+  return(data)
+}
