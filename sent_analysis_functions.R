@@ -120,6 +120,13 @@ apply_threshold <- function(threshold, topic_scores){
   return(topic_scores)
 }
 
+get_weights_vector <- function(initialize_with=1) {
+  col_names <- c('SpeechDbId', 'EnvironmentalProtection', 'DebateGovernmentPolicy', 'EconomicPolicy', 'AgriculturalPolicy', 'GreenPolicies', 'Reunification', 'CoalMining', 'EuropeanCoalAndSteelCommunity', 'SubsidyReduction', 'NuclearPhaseOut', 'CommonTerms', 'Procedural', 'ResearchAndDevelopment', 'TransportPolicy', 'RisksOfNuclearEnergy', 'FiscalReform', 'EnergyTransitionAndPowerMarket', 'JobMarket', 'Procedural2', 'InternationalCooperation', 'NaturalResources', 'HardCoalSubsidies', 'StructuralAdjustment', 'PolicyStatements', 'ForeignPolicy', 'Budget2', 'FederalGovernment', 'Budget', 'HousingAndSocialSecurity', 'EnergySupplyMix', 'EconomicPolicy2', 'EconomicPolicyAndParticipation', 'ClimateProtection', 'TaxPolicy', 'CoalPolicyAndPrices')
+  weights <- data.frame(matrix(data=initialize_with, ncol=length(col_names), nrow=1))
+  colnames(weights) <- col_names
+  return(weights)
+}
+
 calculate_total_sentiment <- function (topic_scores, data){
   anti_coal_topics <- (topic_scores$ClimateProtection + topic_scores$EnergySupplyMix + topic_scores$EnergyTransitionAndPowerMarket + topic_scores$EnvironmentalProtection + topic_scores$GreenPolicies + topic_scores$SubsidyReduction)/6
   pro_coal_topics <- (topic_scores$EuropeanCoalAndSteelCommunity + topic_scores$HardCoalSubsidies + topic_scores$JobMarket + topic_scores$NaturalResources)/4
@@ -127,6 +134,26 @@ calculate_total_sentiment <- function (topic_scores, data){
   for (i in seq(1, nrow(data))) {
     row_number <- which(topic_scores$SpeechDbId == data$ID[i])
     data$TotalSentiment[i] <- (data$Sentiment[i] * pro_coal_topics[row_number]) - (data$Sentiment[i] * anti_coal_topics[row_number])
+  }
+  return(data)
+}
+
+calculate_pro_coal_sentiment <- function (topic_scores){
+  pro_coal_topics <- (topic_scores$EuropeanCoalAndSteelCommunity + topic_scores$HardCoalSubsidies + topic_scores$JobMarket + topic_scores$NaturalResources)/4
+
+  for (i in seq(1, nrow(data))) {
+    row_number <- which(topic_scores$SpeechDbId == data$ID[i])
+    data$ProCoalSentiment[i] <- data$Sentiment[i] * pro_coal_topics[row_number]
+  }
+  return(data)
+}
+
+calculate_anti_coal_sentiment <- function (topic_scores){
+  anti_coal_topics <- (topic_scores$ClimateProtection + topic_scores$EnergySupplyMix + topic_scores$EnergyTransitionAndPowerMarket + topic_scores$EnvironmentalProtection + topic_scores$GreenPolicies + topic_scores$SubsidyReduction)/6
+
+  for (i in seq(1, nrow(data))) {
+    row_number <- which(topic_scores$SpeechDbId == data$ID[i])
+    data$AntiCoalSentiment[i] <- data$Sentiment[i] * anti_coal_topics[row_number]
   }
   return(data)
 }
