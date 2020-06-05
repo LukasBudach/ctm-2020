@@ -101,6 +101,13 @@ read_topic_scores <- function(filepath) {
     return(read_csv(filepath, skip=3, col_names=col_names, col_types=cols))
 }
 
+get_weights_vector <- function(initialize_with=1) {
+  col_names <- c('SpeechDbId', 'EnvironmentalProtection', 'DebateGovernmentPolicy', 'EconomicPolicy', 'AgriculturalPolicy', 'GreenPolicies', 'Reunification', 'CoalMining', 'EuropeanCoalAndSteelCommunity', 'SubsidyReduction', 'NuclearPhaseOut', 'CommonTerms', 'Procedural', 'ResearchAndDevelopment', 'TransportPolicy', 'RisksOfNuclearEnergy', 'FiscalReform', 'EnergyTransitionAndPowerMarket', 'JobMarket', 'Procedural2', 'InternationalCooperation', 'NaturalResources', 'HardCoalSubsidies', 'StructuralAdjustment', 'PolicyStatements', 'ForeignPolicy', 'Budget2', 'FederalGovernment', 'Budget', 'HousingAndSocialSecurity', 'EnergySupplyMix', 'EconomicPolicy2', 'EconomicPolicyAndParticipation', 'ClimateProtection', 'TaxPolicy', 'CoalPolicyAndPrices')
+  weights <- data.frame(matrix(data=initialize_with, ncol=length(col_names), nrow=1))
+  colnames(weights) <- col_names
+  return(weights)
+}
+
 calculate_total_sentiment <- function (topic_scores){
   anti_coal_topics <- (topic_scores$ClimateProtection + topic_scores$EnergySupplyMix + topic_scores$EnergyTransitionAndPowerMarket + topic_scores$EnvironmentalProtection + topic_scores$GreenPolicies + topic_scores$SubsidyReduction)/6
   pro_coal_topics <- (topic_scores$EuropeanCoalAndSteelCommunity + topic_scores$HardCoalSubsidies + topic_scores$JobMarket + topic_scores$NaturalResources)/4

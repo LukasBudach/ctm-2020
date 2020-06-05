@@ -23,3 +23,5 @@ data <- calculate_total_sentiment(topic_scores)
 
 data <- calculate_pro_coal_sentiment(topic_scores)
 data <- calculate_anti_coal_sentiment(topic_scores)
+
+weights <- get_weights_vector(initialize_with=0)
