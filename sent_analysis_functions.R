@@ -58,3 +58,56 @@ get_stemmed_speeches <- function(dataset) {
   }
   return(speeches)
 }
+
+read_topic_scores <- function(filepath) {
+  library(readr)
+  col_names <- c('SpeechDbId', 'EnvironmentalProtection', 'DebateGovernmentPolicy', 'EconomicPolicy', 'AgriculturalPolicy', 'GreenPolicies', 'Reunification', 'CoalMining', 'EuropeanCoalAndSteelCommunity', 'SubsidyReduction', 'NuclearPhaseOut', 'CommonTerms', 'Procedural', 'ResearchAndDevelopment', 'TransportPolicy', 'RisksOfNuclearEnergy', 'FiscalReform', 'EnergyTransitionAndPowerMarket', 'JobMarket', 'Procedural2', 'InternationalCooperation', 'NaturalResources', 'HardCoalSubsidies', 'StructuralAdjustment', 'PolicyStatements', 'ForeignPolicy', 'Budget2', 'FederalGovernment', 'Budget', 'HousingAndSocialSecurity', 'EnergySupplyMix', 'EconomicPolicy2', 'EconomicPolicyAndParticipation', 'ClimateProtection', 'TaxPolicy', 'CoalPolicyAndPrices')
+  cols <- cols(SpeechDbId=col_integer(),
+               EnvironmentalProtection=col_double(),
+               DebateGovernmentPolicy=col_double(),
+               EconomicPolicy=col_double(),
+               AgriculturalPolicy=col_double(),
+               GreenPolicies=col_double(),
+               Reunification=col_double(),
+               CoalMining=col_double(),
+               EuropeanCoalAndSteelCommunity=col_double(),
+               SubsidyReduction=col_double(),
+               NuclearPhaseOut=col_double(),
+               CommonTerms=col_double(),
+               Procedural=col_double(),
+               ResearchAndDevelopment=col_double(),
+               TransportPolicy=col_double(),
+               RisksOfNuclearEnergy=col_double(),
+               FiscalReform=col_double(),
+               EnergyTransitionAndPowerMarket=col_double(),
+               JobMarket=col_double(),
+               Procedural2=col_double(),
+               InternationalCooperation=col_double(),
+               NaturalResources=col_double(),
+               HardCoalSubsidies=col_double(),
+               StructuralAdjustment=col_double(),
+               PolicyStatements=col_double(),
+               ForeignPolicy=col_double(),
+               Budget2=col_double(),
+               FederalGovernment=col_double(),
+               Budget=col_double(),
+               HousingAndSocialSecurity=col_double(),
+               EnergySupplyMix=col_double(),
+               EconomicPolicy2=col_double(),
+               EconomicPolicyAndParticipation=col_double(),
+               ClimateProtection=col_double(),
+               TaxPolicy=col_double(),
+               CoalPolicyAndPrices=col_double())
+    return(read_csv(filepath, skip=3, col_names=col_names, col_types=cols))
+}
+
+calculate_total_sentiment <- function (topic_scores){
+  anti_coal_topics <- (topic_scores$ClimateProtection + topic_scores$EnergySupplyMix + topic_scores$EnergyTransitionAndPowerMarket + topic_scores$EnvironmentalProtection + topic_scores$GreenPolicies + topic_scores$SubsidyReduction)/6
+  pro_coal_topics <- (topic_scores$EuropeanCoalAndSteelCommunity + topic_scores$HardCoalSubsidies + topic_scores$JobMarket + topic_scores$NaturalResources)/4
+
+  for (i in seq(1, nrow(data))) {
+    row_number <- which(topic_scores$SpeechDbId == data$ID[i])
+    data$TotalSentiment[i] <- (data$Sentiment[i] * pro_coal_topics[row_number]) - (data$Sentiment[i] * anti_coal_topics[row_number])
+  }
+  return(data)
+}
