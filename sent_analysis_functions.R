@@ -101,7 +101,26 @@ read_topic_scores <- function(filepath) {
     return(read_csv(filepath, skip=3, col_names=col_names, col_types=cols))
 }
 
-calculate_total_sentiment <- function (topic_scores){
+make_binary_vec <- function(vec, threshold) {
+  return(sapply(vec, FUN=make_binary_val, threshold = threshold))
+}
+
+make_binary_val <- function(val, threshold) {
+  return(ifelse(val > threshold,1,0))
+}
+
+apply_threshold <- function(threshold, topic_scores){
+  threshold <- mean(topic_scores$GreenPolicies)
+  speechID <- topic_scores$SpeechDbId
+  colNames <- colnames(topic_scores)
+  topic_scores <- as.data.frame(sapply(seq(2, ncol(topic_scores)), FUN=make_binary_vec, threshold = threshold, simplify=FALSE))
+
+  topic_scores <- cbind(speechID, topic_scores)
+  colnames(topic_scores) <- colNames
+  return(topic_scores)
+}
+
+calculate_total_sentiment <- function (topic_scores, data){
   anti_coal_topics <- (topic_scores$ClimateProtection + topic_scores$EnergySupplyMix + topic_scores$EnergyTransitionAndPowerMarket + topic_scores$EnvironmentalProtection + topic_scores$GreenPolicies + topic_scores$SubsidyReduction)/6
   pro_coal_topics <- (topic_scores$EuropeanCoalAndSteelCommunity + topic_scores$HardCoalSubsidies + topic_scores$JobMarket + topic_scores$NaturalResources)/4
 
