@@ -30,8 +30,10 @@ get_sentiment_dictionary <- function() {
   alternative_words <- str_split(dict_pos$Alt, ',')
   alternative_words <- append(alternative_words, str_split(dict_neg$Alt, ','))
 
+  pb <- txtProgressBar(min=1, max=nrow(dict_new), initial=1)
   it_range <- seq(1, nrow(dict_new))
   for (i in it_range) {
+    setTxtProgressBar(pb, i)
     alt_word_vec <- alternative_words[[i]]
     if (anyNA(alt_word_vec)) {
       next
@@ -137,4 +139,15 @@ calculate_anti_coal_sentiment <- function (topic_scores){
     data$AntiCoalSentiment[i] <- data$Sentiment[i] * anti_coal_topics[row_number]
   }
   return(data)
+}
+
+calculate_weighted_sentiment <- function(dataset, topic_scores, weights) {
+  weighted_topics <- as.data.frame(sweep(as.matrix(topic_scores), MARGIN=2, as.matrix(weights), '*'))
+  weighted_topics <- rowSums(weighted_topics)
+
+  for (i in seq(1, nrow(dataset))) {
+    row_number <- which(topic_scores$SpeechDbId == dataset$ID[i])
+    dataset$WeightedSentiment[i] <- dataset$Sentiment[i] * weighted_topics[row_number]
+  }
+  return(dataset)
 }

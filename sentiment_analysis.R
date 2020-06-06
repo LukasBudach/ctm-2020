@@ -24,4 +24,22 @@ data <- calculate_total_sentiment(topic_scores)
 data <- calculate_pro_coal_sentiment(topic_scores)
 data <- calculate_anti_coal_sentiment(topic_scores)
 
+make_zero <- function(val) {
+  if (val < 0.5) {
+    return(0)
+  }
+  return(val)
+}
+
+make_zero_vec <- function(vec) {
+  return(sapply(vec, FUN=make_zero))
+}
+
+topic_scores <- as.data.frame(sapply(topic_scores, FUN=make_zero_vec, simplify=FALSE))
+
+for (col in colnames(topic_scores)){
+  print(col)
+}
 weights <- get_weights_vector(initialize_with=0)
+weights$GreenPolicies = 1
+data <- calculate_weighted_sentiment(data, topic_scores, weights)
