@@ -153,3 +153,41 @@ draw_eiffel_tower_diagram <- function (res, filename){
   dev.off()
 }
 
+draw_funnel_diagram <- function(labels, values, filename){
+  library(ggplot2)
+  library(reshape2) # for melt()
+
+  # create data
+  data <- data.frame(steps=character(length(labels)), numbers=double(length(values)), rate=double(length(values)))
+  data$steps <- labels
+  data$numbers <- values
+
+  # calculate percentage
+  for (i in seq(1, nrow(data))){
+    data$rate[i] <- (data$numbers[i] * 100) / data$numbers[1]
+  }
+
+  # add spacing, melt, sort
+  total <- subset(data, rate==100)$numbers
+  data$padding <- (total - data$numbers) / 2
+  molten <- melt(data[, -3], id.var='steps')
+  molten <- molten[order(molten$variable, decreasing=T), ]
+  molten$steps <- factor(molten$steps, levels=rev(data$steps))
+
+  ggplot(molten, aes(x=steps)) +
+    geom_bar(aes(y=value, fill=variable),
+          stat='identity', position='stack') +
+    geom_text(data=data,
+        aes(y=total/2,
+          label=paste(round(rate), '%')),
+          color='white') +
+    scale_fill_manual(values=c('grey40', NA) ) +
+    coord_flip() +
+    theme(legend.position='none',
+          axis.title.x=element_blank(),
+          axis.text.x=element_blank(),
+          axis.ticks.x=element_blank()) +
+    labs(x='filter')
+
+  ggsave(filename=filename)
+}
