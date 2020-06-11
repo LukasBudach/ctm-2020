@@ -189,7 +189,7 @@ stem_speech <- function(x) {
 get_frequency_matrix <- function(dataset, stem_speeches=FALSE, sparse=0.999) {
   library(tm)
 
-  corpus <- VCorpus(VectorSource(data$Speech), readerControl=list(language='ger'))
+  corpus <- VCorpus(VectorSource(dataset$Speech), readerControl=list(language='ger'))
   corpus <- tm_map(corpus, removeNumbers) # REMOVE NUMBERS
   corpus <- tm_map(corpus, stripWhitespace) # REMOVE EXTRA WHITE SPACE
   corpus <- tm_map(corpus, removePunctuation)
