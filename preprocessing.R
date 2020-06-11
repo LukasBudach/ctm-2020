@@ -174,3 +174,26 @@ res <- run_wordfish(tdmat=mat,
                     tol=1e-7)
 speaker_speeches_by_party(raw=visualization_copy, res=res, filename='data/speaker_p_17_19_co_100_vp_np_green18_cdu18.png', TRUE)
 draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_17_19_co_100_vp_np_green18_cdu18_words.png')
+
+# funnel diagram
+data <- read_speeches('data/database_export_search_89.csv')
+data <- filter(data, 'p', min_period=17, max_period=19)
+data_origin <- group_speeches(data, 'none', multiple_periods=TRUE)
+mat_origin <- get_frequency_matrix(data_origin, sparse=0.9999)
+
+data_vp <- filter(data, 'vp') # remove vocabulary of the Bundestagspräsident(en)
+data_vp <- group_speeches(data_vp, 'none', multiple_periods=TRUE)
+mat_vp <- get_frequency_matrix(data_vp, sparse=0.9999)
+
+data_nc <- filter(data, 'nc', chars_around=100) # only keep parts of speeches that are NOT within chars_around area of coal keyword
+data_nc <- group_speeches(data_nc, 'none', multiple_periods=TRUE)
+mat_nc <- get_frequency_matrix(data_nc, sparse=0.9999)
+
+labels <- c('origin', 'vp', 'nc')
+values <- c(nrow(mat), nrow(mat_vp), nrow(mat_nc))
+#values <- prepare_funnel_diagramm(labels, multiple_periods=TRUE, sparse=0.9999, chars_around=100)
+draw_funnel_diagram(labels, values, filename='data/funnel_test.png')
+
+# np, cc, cp -> don't work
+# vp, nc, co -> same amount of words
+
