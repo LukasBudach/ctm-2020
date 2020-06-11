@@ -6,10 +6,15 @@
 # only needs to be executed once, as the dictionary of positive/negative words does not need to change
 dictionaryGerman <- get_sentiment_dictionary()
 
+raw <-read_speeches('data/database_export_search_89.csv')
+raw <- filter(data, 'p', min_period=17, max_period=19)
+
 data <- read_speeches('data/database_export_search_89.csv')
-data <- filter(data, 'p', min_period=19, max_period=19)
+data <- filter(data, 'p', min_period=17, max_period=19)
+# data <- filter(data, 'vp')
+# data <- filter(data, 'np')
 data <- group_speeches(data, 'none', multiple_periods=TRUE)
-data <- data[nchar(data$Speech) < 1000,]
+# data <- data[nchar(data$Speech) < 1000,]
 
 data$SpeechStem <- get_stemmed_speeches(data)
 
@@ -47,11 +52,21 @@ calc_all_weighted_sentiments <- function(dataset, topic_scores) {
 plot_weighted_sentiments <- function(dataset) {
   relevant_cols <- colnames(dataset)
   relevant_cols <- relevant_cols[! relevant_cols %in% c('ID', 'Speech', 'SpeechStem')]
-  relevant_data <- dataset[relevant_cols]
-  for (i in seq(1, nrow(data))) {
-    png(filename=paste0('data/Sentiment_', data$ID[i], '.png'), width=600, height=600)
-    plot(relevant_data[,i], xaxt='n', xlab='', ylab='Score')
+  relevant_dataset <- dataset[relevant_cols]
+  t <- relevant_dataset[1,]
+  t <- as.character(relevant_dataset[2,])
+  png(filename=paste0('data/Sentiment_', dataset$ID, '.png'), width=600, height=600)
+  plot(as.character(relevant_dataset[2,]), xaxt='n', xlab='', ylab='Score')
+  axis(1, at=1:length(relevant_cols), labels=relevant_cols, , las=2)
+  for (i in seq(1, nrow(dataset))) {
+    png(filename=paste0('data/Sentiment_', dataset$ID[i], '.png'), width=1000, height=1000)
+    par(mar = c(15, 5, 5, 5)) # Set the margin on all sides to 6
+    plot(as.character(relevant_dataset[i,]), xaxt='n', xlab='', ylab='Score')
     axis(1, at=1:length(relevant_cols), labels=relevant_cols, , las=2)
+    abline(h=0, col='grey')
+    for (j in seq(1, length(relevant_cols))) {
+      abline(v=j, col='grey')
+    }
     dev.off()
   }
 }
