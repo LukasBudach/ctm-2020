@@ -236,7 +236,7 @@ draw_funnel_diagram <- function(labels, wordcounts, filename, pipelined=FALSE){
   molten <- molten[order(molten$variable, decreasing=T), ]
   molten$labels <- factor(molten$labels, levels=rev(data$labels))
 
-  ifelse(pipelined, ylabel <- "Pipelined Filters", ylabel <- "Seperate Filters")
+  ifelse(pipelined, ylabel <- "Pipelined Filters", ylabel <- "Separate Filters")
 
   ggplot(molten, aes(x=labels)) +
     geom_bar(aes(y=value, fill=variable),
