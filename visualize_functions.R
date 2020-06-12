@@ -173,7 +173,7 @@ prepare_normal_funnel <- function (labels, min_period=NULL, max_period=NULL, mul
       data_new <- group_speeches(data_new, 'none', multiple_periods)
     }
 
-    mat <- get_frequency_matrix(data_new, sparse)
+    mat <- get_frequency_matrix(data_new, sparse=sparse)
     wordcounts[i] <- nrow(mat)
 
     rm(data_new)
@@ -202,7 +202,7 @@ prepare_pipelined_funnel <- function (labels, min_period=NULL, max_period=NULL, 
     }
 
     data_grouped <- group_speeches(data_pipelined, 'none', multiple_periods)
-    mat <- get_frequency_matrix(data_grouped, sparse)
+    mat <- get_frequency_matrix(data_grouped, sparse=sparse)
     wordcounts[i] <- nrow(mat)
 
     rm(data_grouped)
