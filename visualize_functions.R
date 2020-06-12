@@ -153,14 +153,72 @@ draw_eiffel_tower_diagram <- function (res, filename){
   dev.off()
 }
 
-draw_funnel_diagram <- function(labels, values, filename){
+# labels := {mode}(_{value})?
+prepare_normal_funnel <- function (labels, min_period=NULL, max_period=NULL, multiple_periods=FALSE, sparse=0.999, threshold=NULL, chars_around=NULL){
+  wordcounts <- vector()
+
+  for (i in seq(1, length(labels))) {
+    if (i == 1){
+      data <- read_speeches('data/database_export_search_89.csv')
+      data <- filter(data, 'p', min_period, max_period)
+      data_new <- group_speeches(data, 'none', multiple_periods)
+    } else {
+      mode <- sub("_.*", "", labels[i])
+      if (!is.na(sub(".*_", "", labels[i]))){
+        value <- sub(".*_", "", labels[i])
+        if (mode %in% c("cc", "cp")) threshold <- as.numeric(value)
+        else if (mode %in% c("co", "nc")) chars_around <- as.numeric(value)
+      }
+      data_new <- filter(data, mode, min_period, max_period, threshold, chars_around)
+      data_new <- group_speeches(data_new, 'none', multiple_periods)
+    }
+
+    mat <- get_frequency_matrix(data_new, sparse)
+    wordcounts[i] <- nrow(mat)
+
+    rm(data_new)
+    rm(mat)
+  }
+  return(wordcounts)
+}
+
+# labels := {mode}(_{value})?
+prepare_pipelined_funnel <- function (labels, min_period=NULL, max_period=NULL, multiple_periods=FALSE, sparse=0.999, threshold=NULL, chars_around=NULL){
+  wordcounts <- vector()
+
+  for (i in seq(1, length(labels))) {
+    if (i == 1){
+      data_pipelined <- read_speeches('data/database_export_search_89.csv')
+      data_pipelined <- filter(data_pipelined, 'p', min_period, max_period)
+    } else {
+      mode <- sub("_.*", "", labels[i])
+      if (!is.na(sub(".*_", "", labels[i]))){
+        value <- sub(".*_", "", labels[i])
+        if (mode %in% c("cc", "cp")) threshold <- as.numeric(value)
+        else if (mode %in% c("co", "nc")) chars_around <- as.numeric(value)
+      }
+
+      data_pipelined <- filter(data_pipelined, mode, min_period, max_period, threshold, chars_around)
+    }
+
+    data_grouped <- group_speeches(data_pipelined, 'none', multiple_periods)
+    mat <- get_frequency_matrix(data_grouped, sparse)
+    wordcounts[i] <- nrow(mat)
+
+    rm(data_grouped)
+    rm(mat)
+  }
+  return(wordcounts)
+}
+
+draw_funnel_diagram <- function(labels, wordcounts, filename, pipelined=FALSE){
   library(ggplot2)
   library(reshape2) # for melt()
 
-  # create data
-  data <- data.frame(steps=character(length(labels)), numbers=double(length(values)), rate=double(length(values)))
+  # init columns
+  data <- data.frame(steps=character(length(labels)), numbers=double(length(wordcounts)), rate=double(length(wordcounts)))
   data$steps <- labels
-  data$numbers <- values
+  data$numbers <- wordcounts
 
   # calculate percentage
   for (i in seq(1, nrow(data))){
@@ -174,20 +232,25 @@ draw_funnel_diagram <- function(labels, values, filename){
   molten <- molten[order(molten$variable, decreasing=T), ]
   molten$steps <- factor(molten$steps, levels=rev(data$steps))
 
+  ifelse(pipelined, ylabel <- "Pipelined Filters", ylabel <- "Seperate Filters")
+
   ggplot(molten, aes(x=steps)) +
     geom_bar(aes(y=value, fill=variable),
-          stat='identity', position='stack') +
+        stat='identity',
+        position='stack') +
     geom_text(data=data,
-        aes(y=total/2,
-          label=paste(round(rate), '%')),
-          color='white') +
-    scale_fill_manual(values=c('grey40', NA) ) +
+        aes(y=total/2, label=paste(round(rate), '%')),
+        color='white',
+        size=14) +
+    scale_fill_manual(values=c('grey40', NA)) +
     coord_flip() +
     theme(legend.position='none',
+          axis.title.y=element_text(face="bold", colour="black", size=40),
+          axis.text.y=element_text(colour="black", size=30),
           axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank()) +
-    labs(x='filter')
+    labs(x=ylabel)
 
   ggsave(filename=filename)
 }
