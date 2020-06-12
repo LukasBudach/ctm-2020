@@ -128,7 +128,7 @@ data <- read_speeches('data/database_export_search_89.csv')
 data <- filter(data, 'p', min_period=17, max_period=19)         # filter to period 17-19
 data <- filter(data, 'nc', chars_around=100)                    # filter speeches to exclude a 100 character space around the keyword coal
 visualization_copy <- data
-data <- group_speeches(data, 'speaker', multiple_periods=TRUE)   # group the speeches by their party
+data <- group_speeches(data, 'speaker', multiple_periods=TRUE) # group the speeches by their party
 mat <- get_frequency_matrix(data, sparse=0.9999)
 res <- run_wordfish(tdmat=mat,
                     repr_1=164, # representative for position 1
@@ -160,13 +160,13 @@ draw_eiffel_tower_diagram(res=res, filename='data/party_p_17_19_co_150_np_green1
 
 # run wordfish for periods 17-19 without any specific filtering, grouped by party
 data <- read_speeches('data/database_export_search_89.csv')
-data <- filter(data, 'p', min_period=17, max_period=19)         # filter to period 17-19
+data <- filter(data, 'p', min_period=17, max_period=19)          # filter to period 17-19
 data <- filter(data, 'vp')
 data <- filter(data, 'np')
 data <- filter(data, 'co', chars_around=100)
 visualization_copy <- data
-data <- group_speeches(data, 'speaker', multiple_periods=TRUE)   # group the speeches by their party
-mat <- get_frequency_matrix(data, sparse=0.9999)                     # create the TDM
+data <- group_speeches(data, 'speaker', multiple_periods=TRUE)  # group the speeches by their party
+mat <- get_frequency_matrix(data, sparse=0.9999)                      # create the TDM
 res <- run_wordfish(tdmat=mat,
                     repr_1=7,   # representative for position 1
                     repr_2=9,   # representative for position 2
@@ -176,7 +176,7 @@ speaker_speeches_by_party(raw=visualization_copy, res=res, filename='data/speake
 draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_17_19_co_100_vp_np_green18_cdu18_words.png')
 
 
-# funnel diagrams with separate executed filters
+# funnel diagrams with separately executed filters
 labels <- c('origin', 'np', 'vp')
 wordcounts <- prepare_normal_funnel(labels, 17, 19, TRUE, 0.9999)
 draw_funnel_diagram(labels, wordcounts, 'data/funnel_president.png')
