@@ -154,7 +154,9 @@ draw_eiffel_tower_diagram <- function (res, filename){
 }
 
 # labels := {mode}(_{value})?
-prepare_normal_funnel <- function (labels, min_period=NULL, max_period=NULL, multiple_periods=FALSE, sparse=0.999, threshold=NULL, chars_around=NULL){
+prepare_normal_funnel <- function (labels, min_period=NULL, max_period=NULL, multiple_periods=FALSE, sparse=0.999){
+  threshold <- NULL
+  chars_around <- NULL
   wordcounts <- vector()
 
   for (i in seq(1, length(labels))) {
@@ -183,7 +185,9 @@ prepare_normal_funnel <- function (labels, min_period=NULL, max_period=NULL, mul
 }
 
 # labels := {mode}(_{value})?
-prepare_pipelined_funnel <- function (labels, min_period=NULL, max_period=NULL, multiple_periods=FALSE, sparse=0.999, threshold=NULL, chars_around=NULL){
+prepare_pipelined_funnel <- function (labels, min_period=NULL, max_period=NULL, multiple_periods=FALSE, sparse=0.999){
+  threshold <- NULL
+  chars_around <- NULL
   wordcounts <- vector()
 
   for (i in seq(1, length(labels))) {
@@ -216,25 +220,25 @@ draw_funnel_diagram <- function(labels, wordcounts, filename, pipelined=FALSE){
   library(reshape2) # for melt()
 
   # init columns
-  data <- data.frame(steps=character(length(labels)), numbers=double(length(wordcounts)), rate=double(length(wordcounts)))
-  data$steps <- labels
-  data$numbers <- wordcounts
+  data <- data.frame(labels=character(length(labels)), wordcounts=double(length(wordcounts)), rate=double(length(wordcounts)))
+  data$labels <- labels
+  data$wordcounts <- wordcounts
 
   # calculate percentage
   for (i in seq(1, nrow(data))){
-    data$rate[i] <- (data$numbers[i] * 100) / data$numbers[1]
+    data$rate[i] <- (data$wordcounts[i] * 100) / data$wordcounts[1]
   }
 
   # add spacing, melt, sort
-  total <- subset(data, rate==100)$numbers
-  data$padding <- (total - data$numbers) / 2
-  molten <- melt(data[, -3], id.var='steps')
+  total <- subset(data, rate==100)$wordcounts
+  data$padding <- (total - data$wordcounts) / 2
+  molten <- melt(data[, -3], id.var='labels')
   molten <- molten[order(molten$variable, decreasing=T), ]
-  molten$steps <- factor(molten$steps, levels=rev(data$steps))
+  molten$labels <- factor(molten$labels, levels=rev(data$labels))
 
   ifelse(pipelined, ylabel <- "Pipelined Filters", ylabel <- "Seperate Filters")
 
-  ggplot(molten, aes(x=steps)) +
+  ggplot(molten, aes(x=labels)) +
     geom_bar(aes(y=value, fill=variable),
         stat='identity',
         position='stack') +

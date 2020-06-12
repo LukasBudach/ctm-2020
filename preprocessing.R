@@ -175,73 +175,26 @@ res <- run_wordfish(tdmat=mat,
 speaker_speeches_by_party(raw=visualization_copy, res=res, filename='data/speaker_p_17_19_co_100_vp_np_green18_cdu18.png', TRUE)
 draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_17_19_co_100_vp_np_green18_cdu18_words.png')
 
-# funnel diagrams
-labels <- c("origin", "np", "vp")
-wordcount <- prepare_normal_funnel(labels, 17, 19, TRUE, 0.9999)
-draw_funnel_diagram(labels, wordcount, filename='data/funnel_president.png')
 
-labels <- c("origin", "nc_100", "nc_200", "nc_300", "nc_400", "nc_500", "nc_600")
+# funnel diagrams with separate executed filters
+labels <- c('origin', 'np', 'vp')
 wordcounts <- prepare_normal_funnel(labels, 17, 19, TRUE, 0.9999)
-draw_funnel_diagram(labels, wordcounts, filename='data/funnel_no_coal.png')
+draw_funnel_diagram(labels, wordcounts, 'data/funnel_president.png')
 
-# Prozentzahlen am unterem Rand leicht anders als in ZIP?
+labels <- c('origin', 'nc_100', 'nc_200', 'nc_300', 'nc_400', 'nc_500', 'nc_600')
+wordcounts <- prepare_normal_funnel(labels, 17, 19, TRUE, 0.9999)
+draw_funnel_diagram(labels, wordcounts, 'data/funnel_no_coal.png')
 
-data_co_100 <- filter(data, 'co', chars_around=100) # only keep parts of speeches that are within chars_around area of coal keyword
-data_co_100 <- group_speeches(data_co_100, 'none', multiple_periods=TRUE)
-mat_co_100 <- get_frequency_matrix(data_co_100, sparse=0.9999)
+labels <- c('origin', 'co_600', 'co_500', 'co_400', 'co_300', 'co_200', 'co_100')
+wordcounts <- prepare_normal_funnel(labels, 17, 19, TRUE, 0.9999)
+draw_funnel_diagram(labels, wordcounts, 'data/funnel_coal_only.png')
 
-data_co_200 <- filter(data, 'co', chars_around=200) # only keep parts of speeches that are within chars_around area of coal keyword
-data_co_200 <- group_speeches(data_co_200, 'none', multiple_periods=TRUE)
-mat_co_200 <- get_frequency_matrix(data_co_200, sparse=0.9999)
 
-data_co_300 <- filter(data, 'co', chars_around=300) # only keep parts of speeches that are within chars_around area of coal keyword
-data_co_300 <- group_speeches(data_co_300, 'none', multiple_periods=TRUE)
-mat_co_300 <- get_frequency_matrix(data_co_300, sparse=0.9999)
-
-data_co_400 <- filter(data, 'co', chars_around=400) # only keep parts of speeches that are within chars_around area of coal keyword
-data_co_400 <- group_speeches(data_co_400, 'none', multiple_periods=TRUE)
-mat_co_400 <- get_frequency_matrix(data_co_400, sparse=0.9999)
-
-data_co_500 <- filter(data, 'co', chars_around=500) # only keep parts of speeches that are within chars_around area of coal keyword
-data_co_500 <- group_speeches(data_co_500, 'none', multiple_periods=TRUE)
-mat_co_500 <- get_frequency_matrix(data_co_500, sparse=0.9999)
-
-data_co_600 <- filter(data, 'co', chars_around=600) # only keep parts of speeches that are within chars_around area of coal keyword
-data_co_600 <- group_speeches(data_co_600, 'none', multiple_periods=TRUE)
-mat_co_600 <- get_frequency_matrix(data_co_600, sparse=0.9999)
-
-labels <- c('original', 'co_600', 'co_500', 'co_400', 'co_300', 'co_200', 'co_100')
-values <- c(nrow(mat_origin), nrow(mat_co_600), nrow(mat_co_500), nrow(mat_co_400), nrow(mat_co_300), nrow(mat_co_200), nrow(mat_co_100))
-draw_funnel_diagram(labels, values, filename='data/funnel_coal_only.png')
-
-data_pipeline <- filter(data, 'vp')
-vp_stage_pipeline <- group_speeches(data_pipeline, 'none', multiple_periods=TRUE)
-vp_stage_pipeline <- get_frequency_matrix(vp_stage_pipeline, sparse=0.9999)
-data_pipeline <- filter(data_pipeline, 'np')
-np_stage_pipeline <- group_speeches(data_pipeline, 'none', multiple_periods=TRUE)
-np_stage_pipeline <- get_frequency_matrix(np_stage_pipeline, sparse=0.9999)
-data_pipeline <- filter(data_pipeline, 'co', chars_around=300)
-co_stage_pipeline <- group_speeches(data_pipeline, 'none', multiple_periods=TRUE)
-co_stage_pipeline <- get_frequency_matrix(co_stage_pipeline, sparse=0.9999)
-labels <- c('original', 'vp', 'np', 'co_300')
-values <- c(nrow(mat_origin), nrow(vp_stage_pipeline), nrow(np_stage_pipeline), nrow(co_stage_pipeline))
-draw_funnel_diagram(labels, values, filename='data/funnel_pipeline_vp_np_co_300.png')
-
-data_pipeline <- filter(data, 'co', chars_around=300)
-co_stage_pipeline <- group_speeches(data_pipeline, 'none', multiple_periods=TRUE)
-co_stage_pipeline <- get_frequency_matrix(co_stage_pipeline, sparse=0.9999)
-data_pipeline <- filter(data_pipeline, 'vp')
-vp_stage_pipeline <- group_speeches(data_pipeline, 'none', multiple_periods=TRUE)
-vp_stage_pipeline <- get_frequency_matrix(vp_stage_pipeline, sparse=0.9999)
-data_pipeline <- filter(data_pipeline, 'np')
-np_stage_pipeline <- group_speeches(data_pipeline, 'none', multiple_periods=TRUE)
-np_stage_pipeline <- get_frequency_matrix(np_stage_pipeline, sparse=0.9999)
-
+# funnel diagrams with pipelined filters
 labels <- c('original', 'co_300', 'vp', 'np')
-values <- c(nrow(mat_origin), nrow(co_stage_pipeline), nrow(vp_stage_pipeline), nrow(np_stage_pipeline))
-draw_funnel_diagram(labels, values, filename='data/funnel_pipeline_co_300_vp_np.png')
+wordcounts <- prepare_pipelined_funnel(labels, 17, 19, TRUE, 0.9999)
+draw_funnel_diagram(labels, wordcounts, 'data/funnel_pipeline_co_300_vp_np.png', TRUE)
 
-labels <- c('origin', 'vp', 'nc_100', 'co_100')
-values <- c(nrow(mat_origin), nrow(mat_vp), nrow(mat_nc), nrow(mat_co))
-#values <- prepare_funnel_diagramm(modes, multiple_periods=TRUE, sparse=0.9999, chars_around=100)
-draw_funnel_diagram(labels, values, filename='data/funnel_test.png')
+labels <- c('original', 'vp', 'np', 'co_300')
+wordcounts <- prepare_pipelined_funnel(labels, 17, 19, TRUE, 0.9999)
+draw_funnel_diagram(labels, wordcounts, 'data/funnel_pipeline_vp_np_co_300.png', TRUE)
