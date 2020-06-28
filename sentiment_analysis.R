@@ -7,14 +7,15 @@
 dictionaryGerman <- get_sentiment_dictionary()
 
 raw <-read_speeches('data/database_export_search_89.csv')
-raw <- filter(raw, 'p', min_period=17, max_period=17)
+raw <- filter(raw, 'p', min_period=18, max_period=18)
 raw <- filter(raw, 'np')
 raw <- group_speeches(raw, 'none', multiple_periods=TRUE)
 
 data <- read_speeches('data/database_export_search_89.csv')
-data <- filter(data, 'p', min_period=17, max_period=17)
+data <- filter(data, 'p', min_period=18, max_period=18)
 data <- filter(data, 'vp')
 data <- filter(data, 'np')
+data <- filter(data, 'co', chars_around=300)
 data <- group_speeches(data, 'none', multiple_periods=TRUE)
 # data <- data[nchar(data$Speech) < 1000,]
 
@@ -29,7 +30,7 @@ data <- data[(data$Sentiment <= quantile(data$Sentiment, 0.05)) | (data$Sentimen
 data$SpeechStem <- NULL
 data <- data[with(data, order(Sentiment)),]
 
-write_delim(data, 'data/extreme_sentiment_17.csv', delim='\n')
+write_delim(data, 'data/extreme_sentiment_co_18.csv', delim='\n')
 
 topic_scores <- read_topic_scores('data/topic_scores_Kohle.csv')
 
