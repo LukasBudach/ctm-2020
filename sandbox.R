@@ -150,6 +150,135 @@ res_all$documents[,'omega'] = res_all$documents[,'omega'] - res_gt$documents[,'o
 speaker_speeches_by_party(raw=data, res=res_all, filename='data/speaker_p17_19_Hofreiter18_Laemmel18_diff_all_nc_100.png', TRUE)
 
 data <- read_speeches('data/database_export_search_89.csv')
-data <- filter(data, 'p', min_period=17, max_period=19)
+data <- filter(data, 'p', min_period=18, max_period=19)
 data <- filter(data, 'vp')
+
+labels <- c('original', 'vp', 'np', 'co_50')
+wordcounts <- prepare_pipelined_funnel(labels, 18, 18, FALSE, 0.9999)
+draw_funnel_diagram(labels, wordcounts, 'data/funnel_pipeline_vp_np_co_50.png', TRUE)
+
+
+read_scored_extremes <- function(filepath) {
+  library(readr)
+  col_names <- c('SpeechDbId', 'CoalScore')
+  cols <- cols(SpeechDbId=col_integer(), CoalScore=col_double())
+  return(read_csv(filepath, skip=1, col_names=col_names, col_types=cols))
+}
+
+data <- read_speeches('data/database_export_search_89.csv')
+data <- filter(data, 'p', min_period=18, max_period=19)
+scored <- read_scored_extremes('data/scored_extremes.csv')
+ids_in_both <- intersect(data$SpeechDbId, scored$SpeechDbId)
+scored <- scored[scored$SpeechDbId %in% ids_in_both,]
+scored$Speech <- data[data$SpeechDbId %in% scored$SpeechDbId,]$Speech
+
+pro_coal <- scored[scored$CoalScore > 0,]
+neutral <- scored[scored$CoalScore == 0,]
+anti_coal <- scored[scored$CoalScore < 0,]
+
+data <- rbind(data, list(as.integer(0), as.integer(0), '2018-06-21', as.integer(18), as.integer(1), as.integer(0), 'ProCoal', 'scoredPro', as.integer(0), '', as.integer(0), paste(pro_coal$Speech, collapse=' ')))
+data <- rbind(data, list(as.integer(1), as.integer(1), '2018-06-21', as.integer(18), as.integer(1), as.integer(1), 'Neutral', 'scoredNeutral', as.integer(0), '', as.integer(0), paste(neutral$Speech, collapse=' ')))
+data <- rbind(data, list(as.integer(2), as.integer(2), '2018-06-21', as.integer(18), as.integer(1), as.integer(2), 'AntiCoal', 'scoredAnti', as.integer(0), '', as.integer(0), paste(anti_coal$Speech, collapse=' ')))
+
+data <- filter(data, 'co', chars_around=300)
+data <- group_speeches(data, 'party', multiple_periods = TRUE)
+mat <- get_frequency_matrix(data, sparse=0.9999)                 # create the TDM
+
+res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(13, 15, 2, -2), sigma=1, tol=5e-6)
+f <- file('data/wordfish_fixtwo_test_2.txt', 'w+')
+serialize(connection=f, object=res, ascii=TRUE)
+close(f)
+
+res <- run_wordfish(tdmat=mat,
+                    repr_1=13,  # extreme pro
+                    repr_2=15,  # extreme against
+                    name='party_p_18_19_co_300_proCoal_antiCoal',
+                    tol=5e-6)
+
+
+#####################################################################################################################
+#####################################################WORDSCORES######################################################
+
+library(quanteda)
+library(quanteda.textmodels)
+library(stopwords)
+
+read_scored_extremes <- function(filepath) {
+  library(readr)
+  col_names <- c('SpeechDbId', 'CoalScore')
+  cols <- cols(SpeechDbId=col_integer(), CoalScore=col_double())
+  return(read_csv(filepath, skip=1, col_names=col_names, col_types=cols))
+}
+
+data <- read_speeches('data/database_export_search_89.csv')
+data <- filter(data, 'p', min_period=19, max_period=19)
+# data <- filter(data, 'vp')
+# data <- filter(data, 'np')
+data$Speech <- gsub(pattern='[^a-zA-Z0-9äöüÄÖÜß ]', replacement='', data$Speech)
+# data <- filter(data, 'co', chars_around=300)
+scored <- read_scored_extremes('data/scored_extremes.csv')
+ids_in_both <- intersect(data$SpeechDbId, scored$SpeechDbId)
+scored <- scored[scored$SpeechDbId %in% ids_in_both,]
+scored$Speech <- data[data$SpeechDbId %in% scored$SpeechDbId,]$Speech
+scored <- scored[abs(scored$CoalScore) >= 2,]
+
+corpus <- dfm(scored$Speech, remove=stopwords(language='German'))
+model <- textmodel_wordscores(corpus, scored$CoalScore, scale='linear')
+
+
+virgin_corpus <- dfm(data$Speech, remove=stopwords(language='German'))
+result <- predict(model, virgin_corpus, se.fit=TRUE)
+
+readable_result <- as.data.frame(data$SpeechDbId)
+readable_result$CreatedScore <- result$fit
+
+colnames(readable_result) <- c('SpeechDbId', 'CreatedScore')
+
+readable_result <- readable_result[with(readable_result, order(SpeechDbId)),]
+scored <- scored[with(scored, order(SpeechDbId)),]
+
+readable_result <- readable_result[readable_result$SpeechDbId %in% scored$SpeechDbId,]
+readable_result$ManualScore <- scored$CoalScore
+
+filename <- 'data/wordscores_result_19_vs_expected.png'
+png(filename=filename, width=600, height=600)
+plot(readable_result$ManualScore, xaxt='n', xlab='', ylab='Score')
+points(readable_result$CreatedScore, col='red')
+lines(readable_result$ManualScore)
+lines(readable_result$CreatedScore, col='red')
+axis(1, at=1:length(readable_result$SpeechDbId), labels=readable_result$SpeechDbId, las=2)
+# points(as.character(readable_result$SpeechDbId), readable_result$ManualScore, col='black')
+# plot(readable_result$SpeechDbId, readable_result$ManualScore, xlab="Speech ID", ylab="Score")
+# points(readable_result$SpeechDbId, readable_result$CreatedScore, col='red')
+for (j in seq(1:length(readable_result$SpeechDbId))) {
+  abline(v=j, col='grey')
+}
+legend('top', legend=c('Manually created scores', 'Wordscores created scores'), col=c('black', 'red'), pch=1,
+       xpd=TRUE, bty='n', inset=c(0,0), horiz=TRUE)
+dev.off()
+
+write_csv(readable_result, path='data/wordscores_result.csv')
+
+b <- coef(model)
+words <- as.data.frame(b)
+words$psi <- seq(1:length(b))
+
+words <- as.matrix(words)
+rownames(words) <- names(b)
+
+filename <- 'data/wordscores_result_eiffel.png'
+png(filename=filename, width=6000, height=6000)
+plot(words[, 'b'], words[, 'psi'], xlab="Word Weights", ylab="Word Fixed Effect", type="n")
+text(words[, 'b'], words[, 'psi'], rownames(words))
+abline(v=0)
+dev.off()
+
+
+prepped <- as.data.frame(b)
+prepped$words <- words
+
+
+draw_eiffel_tower_diagram(prepped, 'data/wordscores_result_eiffel.png')
+
+summary(model)
 

@@ -30,7 +30,7 @@ data <- data[(data$Sentiment <= quantile(data$Sentiment, 0.05)) | (data$Sentimen
 data$SpeechStem <- NULL
 data <- data[with(data, order(Sentiment)),]
 
-write_delim(data, 'data/extreme_sentiment_co_18.csv', delim='\n')
+write_delim(data, 'data/extreme_sentiment_co_18_test.csv', delim='\n')
 
 topic_scores <- read_topic_scores('data/topic_scores_Kohle.csv')
 
