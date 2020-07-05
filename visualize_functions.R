@@ -111,7 +111,7 @@ speaker_speeches_by_party <- function(raw, res, filename, multiple_periods=FALSE
   dev.off()
 }
 
-party_speeches_by_party <- function(raw, res, filename, multiple_periods=FALSE) {
+party_speeches_by_party <- function(res, filename, multiple_periods=FALSE) {
   plottable <- data.frame()
   colors <- data.frame("cducsu"="black", "fdp"="yellow", "gruene"="green", "spd"="orange", "afd"="blue", "linke"="red")
 
@@ -146,9 +146,48 @@ party_speeches_by_party <- function(raw, res, filename, multiple_periods=FALSE) 
   dev.off()
 }
 
+party_speeches_by_party_extremes <- function(res, filename, multiple_periods=FALSE) {
+  plottable <- data.frame()
+  colors <- data.frame("cducsu"="black", "fdp"="yellow", "gruene"="green", "spd"="orange", "afd"="blue", "linke"="red", "scoredPro"="darkolivegreen", "scoredNeutral"="darkgrey", "scoredAnti"="coral4")
+
+  indices_no_period <- c()
+  periods <- c()
+  if (multiple_periods) {
+    for (el in rownames(res$documents)) {
+      indices_no_period <- append(indices_no_period, trimws(strsplit(el, "_")[[1]][1]))
+      periods <- append(periods, trimws(strsplit(el, "_")[[1]][2]))
+    }
+  } else {
+    indices_no_period <- rownames(res$documents)
+  }
+
+  for(i in seq(1, length(indices_no_period))) {
+    party <- indices_no_period[i]
+    if (! party %in% colnames(colors)) {
+      next
+    }
+    if (multiple_periods) {
+      plottable <- rbind(plottable, list(party, periods[i], res$documents[i, 'omega'], colors[[party]]))
+    } else {
+      plottable <- rbind(plottable, list(party, 1, res$documents[i, 'omega'], colors[[party]]))
+    }
+  }
+  colnames(plottable) <- c('party', 'period', 'position', 'color')
+
+  png(filename=filename, width=600, height=600)
+  plot(x=plottable$period, xlab="Legislative Period", y=plottable$position, ylab="Party Position", col=plottable$color, xaxt = "n")
+  par(mar = c(5, 4, 4, 8))
+  axis(1, at=plottable$period, las=2)
+  #abline(h=0)
+  legend(x='top', legend=colnames(colors), col=as.character(colors[,]), pch=1)
+  dev.off()
+}
+
 draw_eiffel_tower_diagram <- function (res, filename){
   png(filename=filename, width=6000, height=6000)
-  plot(res$words[, 'b'], res$words[, 'psi'], xlab="Word Weights", ylab="Word Fixed Effect", type="n")
+  par(mar=c(16, 16, 16, 16)) # create extra margin room on the right for an axis
+  plot(res$words[, 'b'], res$words[, 'psi'], ylab="Word Fixed Effect", xlab="", type="n", cex.lab=14)
+  title(xlab="Word Weight", line=12, cex.lab=14)
   text(res$words[, 'b'], res$words[, 'psi'], rownames(res$words))
   abline(v=0)
   dev.off()

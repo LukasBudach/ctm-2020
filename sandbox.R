@@ -157,6 +157,8 @@ labels <- c('original', 'vp', 'np', 'co_50')
 wordcounts <- prepare_pipelined_funnel(labels, 18, 18, FALSE, 0.9999)
 draw_funnel_diagram(labels, wordcounts, 'data/funnel_pipeline_vp_np_co_50.png', TRUE)
 
+#####################################################################################################################
+#################################################### WORDFISH #######################################################
 
 read_scored_extremes <- function(filepath) {
   library(readr)
@@ -167,37 +169,53 @@ read_scored_extremes <- function(filepath) {
 
 data <- read_speeches('data/database_export_search_89.csv')
 data <- filter(data, 'p', min_period=18, max_period=19)
-scored <- read_scored_extremes('data/scored_extremes.csv')
-ids_in_both <- intersect(data$SpeechDbId, scored$SpeechDbId)
-scored <- scored[scored$SpeechDbId %in% ids_in_both,]
-scored$Speech <- data[data$SpeechDbId %in% scored$SpeechDbId,]$Speech
+scored_18 <- read_scored_extremes('data/scored_extremes_18.csv')
+scored_19 <- read_scored_extremes('data/scored_extremes_19.csv')
+ids_in_both_18 <- intersect(data$SpeechDbId, scored_18$SpeechDbId)
+ids_in_both_19 <- intersect(data$SpeechDbId, scored_19$SpeechDbId)
 
-pro_coal <- scored[scored$CoalScore > 0,]
-neutral <- scored[scored$CoalScore == 0,]
-anti_coal <- scored[scored$CoalScore < 0,]
+scored_18 <- scored_18[scored_18$SpeechDbId %in% ids_in_both_18,]
+scored_19 <- scored_19[scored_19$SpeechDbId %in% ids_in_both_19,]
+scored_18$Speech <- data[data$SpeechDbId %in% scored_18$SpeechDbId,]$Speech
+scored_19$Speech <- data[data$SpeechDbId %in% scored_19$SpeechDbId,]$Speech
 
-data <- rbind(data, list(as.integer(0), as.integer(0), '2018-06-21', as.integer(18), as.integer(1), as.integer(0), 'ProCoal', 'scoredPro', as.integer(0), '', as.integer(0), paste(pro_coal$Speech, collapse=' ')))
-data <- rbind(data, list(as.integer(1), as.integer(1), '2018-06-21', as.integer(18), as.integer(1), as.integer(1), 'Neutral', 'scoredNeutral', as.integer(0), '', as.integer(0), paste(neutral$Speech, collapse=' ')))
-data <- rbind(data, list(as.integer(2), as.integer(2), '2018-06-21', as.integer(18), as.integer(1), as.integer(2), 'AntiCoal', 'scoredAnti', as.integer(0), '', as.integer(0), paste(anti_coal$Speech, collapse=' ')))
+pro_coal_18 <- scored_18[scored_18$CoalScore > 0,]
+neutral_18 <- scored_18[scored_18$CoalScore == 0,]
+anti_coal_18 <- scored_18[scored_18$CoalScore < 0,]
+pro_coal_19 <- scored_19[scored_19$CoalScore > 0,]
+neutral_19 <- scored_19[scored_19$CoalScore == 0,]
+anti_coal_19 <- scored_19[scored_19$CoalScore < 0,]
+
+data <- rbind(data, list(as.integer(0), as.integer(0), '2018-06-21', as.integer(18), as.integer(1), as.integer(0), 'ProCoal', 'scoredPro', as.integer(0), '', as.integer(0), paste(pro_coal_18$Speech, collapse=' ')))
+data <- rbind(data, list(as.integer(1), as.integer(1), '2018-06-21', as.integer(18), as.integer(1), as.integer(1), 'Neutral', 'scoredNeutral', as.integer(0), '', as.integer(0), paste(neutral_18$Speech, collapse=' ')))
+data <- rbind(data, list(as.integer(2), as.integer(2), '2018-06-21', as.integer(18), as.integer(1), as.integer(2), 'AntiCoal', 'scoredAnti', as.integer(0), '', as.integer(0), paste(anti_coal_18$Speech, collapse=' ')))
+data <- rbind(data, list(as.integer(0), as.integer(0), '2018-06-21', as.integer(19), as.integer(1), as.integer(0), 'ProCoal', 'scoredPro', as.integer(0), '', as.integer(0), paste(pro_coal_19$Speech, collapse=' ')))
+data <- rbind(data, list(as.integer(1), as.integer(1), '2018-06-21', as.integer(19), as.integer(1), as.integer(1), 'Neutral', 'scoredNeutral', as.integer(0), '', as.integer(0), paste(neutral_19$Speech, collapse=' ')))
+data <- rbind(data, list(as.integer(2), as.integer(2), '2018-06-21', as.integer(19), as.integer(1), as.integer(2), 'AntiCoal', 'scoredAnti', as.integer(0), '', as.integer(0), paste(anti_coal_19$Speech, collapse=' ')))
 
 data <- filter(data, 'co', chars_around=300)
-data <- group_speeches(data, 'party', multiple_periods = TRUE)
+data <- group_speeches(data, 'party', multiple_periods=TRUE)
 mat <- get_frequency_matrix(data, sparse=0.9999)                 # create the TDM
 
-res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(13, 15, 2, -2), sigma=1, tol=5e-6)
-f <- file('data/wordfish_fixtwo_test_2.txt', 'w+')
+res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(16, 18, 2.5, -2.5), sigma=1, tol=5e-6)
+f <- file('data/wordfish_fixtwo_test.txt', 'w+')
 serialize(connection=f, object=res, ascii=TRUE)
 close(f)
 
 res <- run_wordfish(tdmat=mat,
                     repr_1=13,  # extreme pro
-                    repr_2=15,  # extreme against
+                    repr_2=15,  # extreme anti
                     name='party_p_18_19_co_300_proCoal_antiCoal',
                     tol=5e-6)
 
+f <- file('data/wordfish_fixtwo_test.txt', 'r')
+res <- unserialize(f)
+close(f)
+
+party_speeches_by_party_extremes(res, filename='data/party_p_18_19_co_300_scoredPro19_scoredAnti19_separate.png', TRUE)
 
 #####################################################################################################################
-#####################################################WORDSCORES######################################################
+#################################################### WORDSCORES #####################################################
 
 library(quanteda)
 library(quanteda.textmodels)
