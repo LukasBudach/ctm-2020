@@ -194,11 +194,13 @@ stem_speech <- function(x) {
   return(paste(words, collapse=' '))
 }
 
-get_frequency_matrix <- function(dataset, stem_speeches=FALSE, sparse=0.999) {
+get_preprocessed_corpus <- function(dataset, stem_speeches=FALSE, remove_numbers=TRUE) {
   library(tm)
 
   corpus <- VCorpus(VectorSource(dataset$Speech), readerControl=list(language='ger'))
-  corpus <- tm_map(corpus, removeNumbers) # REMOVE NUMBERS
+  if (remove_numbers) {
+    corpus <- tm_map(corpus, removeNumbers) # REMOVE NUMBERS
+  }
   corpus <- tm_map(corpus, stripWhitespace) # REMOVE EXTRA WHITE SPACE
   corpus <- tm_map(corpus, removePunctuation)
   corpus <- tm_map(corpus, content_transformer(gsub), pattern="[^a-zA-Z0-9äöüÄÖÜß ]", replacement='')
@@ -207,6 +209,13 @@ get_frequency_matrix <- function(dataset, stem_speeches=FALSE, sparse=0.999) {
   } else {
     corpus <- tm_map(corpus, content_transformer(tolower)) # MAKES EVERYTHING LOWERCASE
   }
+  return(corpus)
+}
+
+get_frequency_matrix <- function(dataset, stem_speeches=FALSE, sparse=0.999) {
+  library(tm)
+
+  corpus <- get_preprocessed_corpus(dataset, stem_speeches=stem_speeches)
   freq_mat <- TermDocumentMatrix(corpus, control=list(tolower=FALSE))
   sparce_mat <- removeSparseTerms(freq_mat, sparse)
   freq <- as.matrix(sparce_mat)
