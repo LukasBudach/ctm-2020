@@ -160,13 +160,6 @@ draw_funnel_diagram(labels, wordcounts, 'data/funnel_pipeline_vp_np_co_50.png', 
 #####################################################################################################################
 #################################################### WORDFISH #######################################################
 
-read_scored_extremes <- function(filepath) {
-  library(readr)
-  col_names <- c('SpeechDbId', 'CoalScore')
-  cols <- cols(SpeechDbId=col_integer(), CoalScore=col_double())
-  return(read_csv(filepath, skip=1, col_names=col_names, col_types=cols))
-}
-
 data <- read_speeches('data/database_export_search_89.csv')
 data <- filter(data, 'p', min_period=18, max_period=19)
 scored_18 <- read_scored_extremes('data/scored_extremes_18.csv')
@@ -194,7 +187,7 @@ data <- rbind(data, list(as.integer(1), as.integer(1), '2018-06-21', as.integer(
 data <- rbind(data, list(as.integer(2), as.integer(2), '2018-06-21', as.integer(19), as.integer(1), as.integer(2), 'AntiCoal', 'scoredAnti', as.integer(0), '', as.integer(0), paste(anti_coal_19$Speech, collapse=' ')))
 
 data <- filter(data, 'co', chars_around=300)
-data <- group_speeches(data, 'party', multiple_periods=TRUE)
+data <- group_speeches(data, 'speaker', multiple_periods=TRUE)
 mat <- get_frequency_matrix(data, sparse=0.9999)                 # create the TDM
 
 res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(16, 18, 2.5, -2.5), sigma=1, tol=5e-6)
@@ -221,13 +214,6 @@ library(quanteda)
 library(quanteda.textmodels)
 library(stopwords)
 
-read_scored_extremes <- function(filepath) {
-  library(readr)
-  col_names <- c('SpeechDbId', 'CoalScore')
-  cols <- cols(SpeechDbId=col_integer(), CoalScore=col_double())
-  return(read_csv(filepath, skip=1, col_names=col_names, col_types=cols))
-}
-
 data <- read_speeches('data/database_export_search_89.csv')
 data <- filter(data, 'p', min_period=19, max_period=19)
 # data <- filter(data, 'vp')
@@ -242,7 +228,6 @@ scored <- scored[abs(scored$CoalScore) >= 2,]
 
 corpus <- dfm(scored$Speech, remove=stopwords(language='German'))
 model <- textmodel_wordscores(corpus, scored$CoalScore, scale='linear')
-
 
 virgin_corpus <- dfm(data$Speech, remove=stopwords(language='German'))
 result <- predict(model, virgin_corpus, se.fit=TRUE)
