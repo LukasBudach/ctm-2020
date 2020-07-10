@@ -22,6 +22,14 @@ read_speeches <- function(filepath) {
 }
 
 
+read_scored_extremes <- function(filepath) {
+  library(readr)
+  col_names <- c('SpeechDbId', 'CoalScore')
+  cols <- cols(SpeechDbId=col_integer(), CoalScore=col_double())
+  return(read_csv(filepath, skip=1, col_names=col_names, col_types=cols))
+}
+
+
 # filter attributes:
 #   dataset -> the dataset to be processed
 #   dataset -> must be a data.frame with the columns Index, SpeechDbId, Date, Period, Sitting, DocDbId, Speaker, Party,
