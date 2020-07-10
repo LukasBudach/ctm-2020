@@ -300,3 +300,327 @@ draw_eiffel_tower_diagram(prepped, 'data/wordscores_result_eiffel.png')
 
 summary(model)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+library(quanteda)
+library(quanteda.textmodels)
+library(stopwords)
+library(readr)
+
+read_scored_extremes <- function(filepath) {
+  library(readr)
+  col_names <- c('SpeechDbId', 'CoalScore')
+  cols <- cols(SpeechDbId=col_integer(), CoalScore=col_double())
+  return(read_csv(filepath, skip=1, col_names=col_names, col_types=cols))
+}
+
+plot_results_vs_expected <- function(result, run_name) {
+  filename <- paste0('data/', run_name, '_vs_expected.png')
+  png(filename=filename, width=1200, height=1200)
+  plot(result$ManualScore, xaxt='n', xlab='', ylab='Score')
+  points(result$CreatedScore, col='red')
+  lines(result$ManualScore)
+  lines(result$CreatedScore, col='red')
+  axis(1, at=1:length(result$SpeechDbId), labels=result$SpeechDbId, las=2)
+  # points(as.character(readable_result$SpeechDbId), readable_result$ManualScore, col='black')
+  # plot(readable_result$SpeechDbId, readable_result$ManualScore, xlab="Speech ID", ylab="Score")
+  # points(readable_result$SpeechDbId, readable_result$CreatedScore, col='red')
+  for (j in seq(1:length(result$SpeechDbId))) {
+    abline(v=j, col='grey')
+  }
+  legend('top', legend=c('Manually created scores', 'Wordscores created scores'), col=c('black', 'red'), pch=1,
+         xpd=TRUE, bty='n', inset=c(0,0), horiz=TRUE)
+  dev.off()
+}
+
+plot_word_weights <- function(trained_model, run_name) {
+  # naming is relevant here!
+  b <- coef(trained_model)
+  words <- as.data.frame(b)
+  words$psi <- seq(1:length(b))
+
+  words <- as.matrix(words)
+  rownames(words) <- names(b)
+
+  filename <- paste0('data/', run_name, '_word_scores.png')
+  png(filename=filename, width=6000, height=6000)
+  plot(words[, 'b'], words[, 'psi'], xlab="Word Weights", ylab="Word Fixed Effect", type="n")
+  text(words[, 'b'], words[, 'psi'], rownames(words))
+  abline(v=0)
+  dev.off()
+}
+
+data <- read_speeches('data/database_export_search_89.csv')
+data <- filter(data, 'p', min_period=19, max_period=19)
+data <- filter(data, 'co', chars_around=300)
+scored <- read_scored_extremes('data/scored_extremes_rounded.csv')
+ids_in_both <- intersect(data$SpeechDbId, scored$SpeechDbId)
+scored <- scored[scored$SpeechDbId %in% ids_in_both,]
+scored$Speech <- data[data$SpeechDbId %in% scored$SpeechDbId,]$Speech
+scored <- scored[abs(scored$CoalScore) >= 2,]
+
+scored_corpus <- get_preprocessed_corpus(scored, stem_speeches=FALSE, remove_numbers=TRUE)
+whole_corpus <- get_preprocessed_corpus(group_speeches(data, 'none'), stem_speeches=FALSE, remove_numbers=TRUE)
+
+feat_mat <- dfm(corpus(scored_corpus), remove=stopwords('de'))
+model <- textmodel_wordscores(feat_mat, scored$CoalScore, scale='linear')
+
+virgin_feat_mat <- dfm(corpus(whole_corpus), remove=stopwords('de'))
+result <- predict(model, virgin_feat_mat, se.fit=TRUE)
+
+readable_result <- as.data.frame(data$SpeechDbId)
+readable_result$CreatedScore <- result$fit
+colnames(readable_result) <- c('SpeechDbId', 'CreatedScore')
+
+readable_result <- readable_result[with(readable_result, order(SpeechDbId)),]
+scored <- scored[with(scored, order(SpeechDbId)),]
+
+readable_result <- readable_result[readable_result$SpeechDbId %in% scored$SpeechDbId,]
+readable_result$ManualScore <- scored$CoalScore
+
+run_name <- 'wordscores_co300_no_numbers_only_extremer_scores_rounded'
+
+write_csv(readable_result, path=paste0('data/', run_name, '_result.csv'))
+plot_results_vs_expected(readable_result, run_name)
+plot_word_weights(model, run_name)
+
+
+
+
+prepped <- as.data.frame(b)
+prepped$words <- words
+
+
+draw_eiffel_tower_diagram(prepped, 'data/wordscores_result_eiffel.png')
+
+
+summary(model)
+
+
+
+
+
+
+data <- read_speeches('data/database_export_search_89.csv')
+data <- filter(data, 'p', min_period=19, max_period=19)
+data <- filter(data, 'sw', min_pct=0.01, max_pct=0.45)  # seem like good thresholds
+#data <- filter(data, 'co', chars_around=300)
+
+
+
+
+
+labels <- c('origin', 'sw_0.01_0.20', 'sw_0.01_0.30', 'sw_0.01_0.40', 'sw_0.01_0.50', 'sw_0.01_0.60', 'sw_0.01_0.70', 'sw_0.01_0.80', 'sw_0.01_0.90', 'sw_0.01_1.00')
+wc <- prepare_normal_funnel(labels, min_period=19, max_period=19)
+draw_funnel_diagram(labels, wc, 'data/funnel_sw_moving_max.png')
+
+
+labels <- c('original', 'co_600', 'sw_0.05_0.45')
+wc <- prepare_pipelined_funnel(labels, min_period=19, max_period=19)
+draw_funnel_diagram(labels, wc, 'data/funnel_pipeline_co_600_sw_05_45.png', pipelined=TRUE)
+
+
+
+
+
+
+library(quanteda)
+library(quanteda.textmodels)
+library(stopwords)
+library(readr)
+
+read_scored_extremes <- function(filepath) {
+  library(readr)
+  col_names <- c('SpeechDbId', 'CoalScore')
+  cols <- cols(SpeechDbId=col_integer(), CoalScore=col_double())
+  return(read_csv(filepath, skip=1, col_names=col_names, col_types=cols))
+}
+
+plot_results_vs_expected <- function(result, run_name) {
+  filename <- paste0('data/', run_name, '_vs_expected.png')
+  png(filename=filename, width=1200, height=1200)
+  plot(result$ManualScore, xaxt='n', xlab='', ylab='Score', ylim=c(-3, 3))
+  points(result$CreatedScore, col='red')
+  lines(result$ManualScore)
+  lines(result$CreatedScore, col='red')
+  axis(1, at=1:length(result$SpeechDbId), labels=result$SpeechDbId, las=2)
+  # points(as.character(readable_result$SpeechDbId), readable_result$ManualScore, col='black')
+  # plot(readable_result$SpeechDbId, readable_result$ManualScore, xlab="Speech ID", ylab="Score")
+  # points(readable_result$SpeechDbId, readable_result$CreatedScore, col='red')
+  for (j in seq(1:length(result$SpeechDbId))) {
+    abline(v=j, col='grey')
+  }
+  legend('top', legend=c('Manually created scores', 'Wordscores created scores'), col=c('black', 'red'), pch=1,
+         xpd=TRUE, bty='n', inset=c(0,0), horiz=TRUE)
+  dev.off()
+}
+
+plot_word_weights <- function(trained_model, run_name) {
+  # naming is relevant here!
+  b <- coef(trained_model)
+  words <- as.data.frame(b)
+  words$psi <- seq(1:length(b))
+
+  words <- as.matrix(words)
+  rownames(words) <- names(b)
+
+  filename <- paste0('data/', run_name, '_word_scores.png')
+  png(filename=filename, width=6000, height=6000)
+  plot(words[, 'b'], words[, 'psi'], xlab="Word Weights", ylab="Word Fixed Effect", type="n")
+  text(words[, 'b'], words[, 'psi'], rownames(words))
+  abline(v=0)
+  dev.off()
+}
+
+results <- as.data.frame(matrix(nrow=0, ncol=9))
+colnames(results) <- c('co', 'swMin', 'swMax', 'meanSquared', '05pct', '25pct', 'mean', '75pct', '95pct')
+data <- read_speeches('data/database_export_search_89.csv')
+
+for (i in seq(250, 600, 50)) {
+  for (j in seq(0.00, 0.2, 0.01)) {
+    for (k in seq(0.4, 0.45, 0.05)) {
+      data_filtered <- filter(data, 'p', min_period=19, max_period=19)
+      data_filtered <- filter(data_filtered, 'co', chars_around=i)
+      data_filtered <- filter(data_filtered,'sw', min_pct=j, max_pct=k)
+      scored <- read_scored_extremes('data/scored_extremes.csv')
+      ids_in_both <- intersect(data_filtered$SpeechDbId, scored$SpeechDbId)
+      scored <- scored[scored$SpeechDbId %in% ids_in_both,]
+      scored$Speech <- data_filtered[data_filtered$SpeechDbId %in% scored$SpeechDbId,]$Speech
+      # scored <- scored[abs(scored$CoalScore) >= 2,]
+
+      scored_corpus <- get_preprocessed_corpus(scored, stem_speeches=FALSE, remove_numbers=TRUE)
+      whole_corpus <- get_preprocessed_corpus(group_speeches(data_filtered, 'none'), stem_speeches=FALSE, remove_numbers=TRUE)
+
+      feat_mat <- dfm(corpus(scored_corpus), remove=stopwords('de'))
+      model <- textmodel_wordscores(feat_mat, scored$CoalScore, scale='linear')
+
+      virgin_feat_mat <- dfm(corpus(whole_corpus), remove=stopwords('de'))
+      result <- predict(model, virgin_feat_mat, se.fit=TRUE)
+
+      readable_result <- as.data.frame(data_filtered$SpeechDbId)
+      readable_result$CreatedScore <- result$fit
+      colnames(readable_result) <- c('SpeechDbId', 'CreatedScore')
+
+      readable_result <- readable_result[with(readable_result, order(SpeechDbId)),]
+      scored <- scored[with(scored, order(SpeechDbId)),]
+
+      readable_result <- readable_result[readable_result$SpeechDbId %in% scored$SpeechDbId,]
+      readable_result$ManualScore <- scored$CoalScore
+
+      readable_result$CreatedScore <- round(readable_result$CreatedScore)
+
+      errors <- abs(readable_result$CreatedScore - readable_result$ManualScore)
+      squared_err <- errors * errors
+      print(paste('co', i, 'min', j, 'max', k))
+      print(paste('Mean error:        ', mean(errors)))
+      print(paste('Mean squared error:', mean(squared_err)))
+      print(paste('Median error:      ', median(errors)))
+      print(paste('05% Quantile error:', quantile(errors, 0.05)))
+      print(paste('25% Quantile error:', quantile(errors, 0.25)))
+      print(paste('75% Quantile error:', quantile(errors, 0.75)))
+      print(paste('95% Quantile error:', quantile(errors, 0.95)))
+      results <- rbind(results, list(i, j, k, mean(squared_err), quantile(errors, 0.05), quantile(errors, 0.25), mean(errors), quantile(errors, 0.75), quantile(errors, 0.95)))
+      colnames(results) <- c('co', 'swMin', 'swMax', 'meanSquared', '05pct', '25pct', 'mean', '75pct', '95pct')
+    }
+  }
+}
+
+write_csv(results, path='data/wordscores_optim_result_runTwo.csv')
+
+
+
+
+
+co <- 400
+sw_min <- 0.07
+sw_max <- 0.45
+
+data <- read_speeches('data/database_export_search_89.csv')
+data_filtered <- filter(data, 'p', min_period=19, max_period=19)
+data_filtered <- filter(data_filtered, 'co', chars_around=co)
+data_filtered <- filter(data_filtered,'sw', min_pct=sw_min, max_pct=sw_max)
+scored <- read_scored_extremes('data/scored_extremes.csv')
+ids_in_both <- intersect(data_filtered$SpeechDbId, scored$SpeechDbId)
+scored <- scored[scored$SpeechDbId %in% ids_in_both,]
+scored$Speech <- data_filtered[data_filtered$SpeechDbId %in% scored$SpeechDbId,]$Speech
+# scored <- scored[abs(scored$CoalScore) >= 2,]
+
+scored_corpus <- get_preprocessed_corpus(scored, stem_speeches=FALSE, remove_numbers=TRUE)
+whole_corpus <- get_preprocessed_corpus(group_speeches(data_filtered, 'none'), stem_speeches=FALSE, remove_numbers=TRUE)
+
+feat_mat <- dfm(corpus(scored_corpus), remove=stopwords('de'))
+model <- textmodel_wordscores(feat_mat, scored$CoalScore, scale='linear')
+
+virgin_feat_mat <- dfm(corpus(whole_corpus), remove=stopwords('de'))
+result <- predict(model, virgin_feat_mat, se.fit=TRUE)
+
+readable_result <- as.data.frame(data_filtered$SpeechDbId)
+readable_result$CreatedScore <- result$fit
+colnames(readable_result) <- c('SpeechDbId', 'CreatedScore')
+
+readable_result <- readable_result[with(readable_result, order(SpeechDbId)),]
+scored <- scored[with(scored, order(SpeechDbId)),]
+
+readable_result <- readable_result[readable_result$SpeechDbId %in% scored$SpeechDbId,]
+readable_result$ManualScore <- scored$CoalScore
+
+readable_result$CreatedScore <- readable_result$CreatedScore * (3 / max(abs(readable_result$CreatedScore)))
+readable_result$CreatedScore <- round(readable_result$CreatedScore)
+
+errors <- abs(readable_result$CreatedScore - readable_result$ManualScore)
+squared_err <- errors * errors
+print(paste('Mean error:        ', mean(errors)))
+print(paste('Mean squared error:', mean(squared_err)))
+print(paste('Median error:      ', median(errors)))
+print(paste('05% Quantile error:', quantile(errors, 0.05)))
+print(paste('25% Quantile error:', quantile(errors, 0.25)))
+print(paste('75% Quantile error:', quantile(errors, 0.75)))
+print(paste('95% Quantile error:', quantile(errors, 0.95)))
+
+run_name <- paste0('wordscores_rounded_co', co, '_sw_', round(sw_min*100), '_', round(sw_max*100), '_no_numbers_scores_raw')
+
+run_name <- paste0('wordscores_rounded_amp_co', co, '_sw_', round(sw_min*100), '_', round(sw_max*100), '_no_numbers_scores_raw')
+
+write_csv(readable_result, path=paste0('data/', run_name, '_result.csv'))
+plot_results_vs_expected(readable_result, run_name)
+plot_word_weights(model, run_name)
+
+
+
+
+
+library(stringr)
+
+chars_around <- 100
+positions <- str_locate_all(data$Speech[3], '(K|k)ohle')[[1]]
+positions[,'start'] <- positions[,'start'] - chars_around
+positions[,'end'] <- positions[,'end'] + chars_around
+
+positions[1, 'start'] <- max(positions[i, 'start'], 1)
+positions[1, 'end'] <- min(positions[i, 'end'], nchar(dataset$Speech[row_idx]))
+
+test <- str_count(data$Speech, '(K|k)ohle') > 0
+
+data <- read_speeches('data/database_export_search_89.csv')
+data <- filter(data, 'p', min_period=19, max_period=19)
+test <- filter_irrelevant_words_(data, 0.01, 0.45)
+word_occurences <- test[str_count(test$word, '(K|k)ohle') == 0,]

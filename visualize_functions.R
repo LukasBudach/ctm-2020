@@ -197,6 +197,8 @@ draw_eiffel_tower_diagram <- function (res, filename){
 prepare_normal_funnel <- function (labels, min_period=NULL, max_period=NULL, multiple_periods=FALSE, sparse=0.999){
   threshold <- NULL
   chars_around <- NULL
+  min_pct <- NULL
+  max_pct <- NULL
   wordcounts <- vector()
 
   for (i in seq(1, length(labels))) {
@@ -206,12 +208,17 @@ prepare_normal_funnel <- function (labels, min_period=NULL, max_period=NULL, mul
       data_new <- group_speeches(data, 'none', multiple_periods)
     } else {
       mode <- sub("_.*", "", labels[i])
-      if (!is.na(sub(".*_", "", labels[i]))){
+      if (mode == 'sw') {
+        thresholds <- strsplit(sub(paste0(sub("_.*", "", labels[i]), '_'), "", labels[i]), '_')[[1]]
+        min_pct <- as.numeric(thresholds[1])
+        max_pct <- as.numeric(thresholds[2])
+      }
+      else if (!is.na(sub(".*_", "", labels[i]))){
         value <- sub(".*_", "", labels[i])
         if (mode %in% c("cc", "cp")) threshold <- as.numeric(value)
         else if (mode %in% c("co", "nc")) chars_around <- as.numeric(value)
       }
-      data_new <- filter(data, mode, min_period, max_period, threshold, chars_around)
+      data_new <- filter(data, mode, min_period, max_period, threshold, chars_around, min_pct, max_pct)
       data_new <- group_speeches(data_new, 'none', multiple_periods)
     }
 
@@ -228,6 +235,8 @@ prepare_normal_funnel <- function (labels, min_period=NULL, max_period=NULL, mul
 prepare_pipelined_funnel <- function (labels, min_period=NULL, max_period=NULL, multiple_periods=FALSE, sparse=0.999){
   threshold <- NULL
   chars_around <- NULL
+  min_pct <- NULL
+  max_pct <- NULL
   wordcounts <- vector()
 
   for (i in seq(1, length(labels))) {
@@ -236,13 +245,18 @@ prepare_pipelined_funnel <- function (labels, min_period=NULL, max_period=NULL, 
       data_pipelined <- filter(data_pipelined, 'p', min_period, max_period)
     } else {
       mode <- sub("_.*", "", labels[i])
-      if (!is.na(sub(".*_", "", labels[i]))){
+      if (mode == 'sw') {
+        thresholds <- strsplit(sub(paste0(sub("_.*", "", labels[i]), '_'), "", labels[i]), '_')[[1]]
+        min_pct <- as.numeric(thresholds[1])
+        max_pct <- as.numeric(thresholds[2])
+      }
+      else if (!is.na(sub(".*_", "", labels[i]))){
         value <- sub(".*_", "", labels[i])
         if (mode %in% c("cc", "cp")) threshold <- as.numeric(value)
         else if (mode %in% c("co", "nc")) chars_around <- as.numeric(value)
       }
 
-      data_pipelined <- filter(data_pipelined, mode, min_period, max_period, threshold, chars_around)
+      data_pipelined <- filter(data_pipelined, mode, min_period, max_period, threshold, chars_around, min_pct, max_pct)
     }
 
     data_grouped <- group_speeches(data_pipelined, 'none', multiple_periods)

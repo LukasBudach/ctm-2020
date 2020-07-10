@@ -120,3 +120,46 @@ filter_non_parliament_president_speaker_<- function(dataset) {
   result <- rbind(dataset, actually_president)
   return(result[!duplicated(result,fromLast = FALSE)&!duplicated(result,fromLast = TRUE),])
 }
+
+filter_irrelevant_words_ <- function(dataset, min_pct, max_pct, stem_speeches=FALSE) {
+  library(tm)
+  library(stringr)
+  corpus <- get_preprocessed_corpus(dataset, stem_speeches=stem_speeches, remove_numbers=TRUE)
+
+  mat <- as.matrix(TermDocumentMatrix(corpus, control=list(tolower=FALSE)))
+
+  n_docs <- length(colnames(mat))
+
+  min_docs <- round(n_docs * min_pct)
+  max_docs <- round(n_docs * max_pct)
+
+  ctr <- 1
+  word_occurences <- data.frame(matrix(ncol=3, nrow=0))
+
+  for (name in rownames(mat)) {
+    occurences <- 0
+    for (i in seq(1, n_docs)) {
+      if (mat[ctr, i] > 0) {
+        occurences <- occurences + 1
+      }
+    }
+    if ((str_count(name, '(K|k)ohle') != 0) || ((occurences >= min_docs) && (occurences <= max_docs))) {
+      word_occurences <- rbind(word_occurences, list(name, occurences, occurences / n_docs))
+    }
+    ctr <- ctr + 1
+  }
+
+  colnames(word_occurences) <- c("word", "n_occurences", 'pct')
+
+  filter_words <- function(speech_corpus, words) {
+    formatted_speeches <- NULL
+    for (i in seq(1, length(speech_corpus))) {
+      parts <- unlist(strsplit(speech_corpus[[i]][[1]], ' '))
+      formatted_speeches <- append(formatted_speeches, paste(parts[parts %in% words], collapse=' '))
+    }
+    return(formatted_speeches)
+  }
+
+  dataset$Speech <- filter_words(corpus, word_occurences$word)
+  return(dataset)
+}

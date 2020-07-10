@@ -34,15 +34,17 @@ read_speeches <- function(filepath) {
 #           nc -> filter, keeping only parts of speeches that are NOT within the chars_around area around an occurence of coal in the text
 #           np -> filter, removing all speeches by the Bundestagspräsident(en) in the dataset
 #           vp -> filter, removing the vocabulary the Bundestagspräsident(en) in the dataset used
+#           sw -> filter, removing the words from the speeches that are more common or less common than the given thresholds
 #
 #   returns the resulting data as data.frame with the same columns as the input (but likely less rows!)
 
-filter <- function(dataset, mode, min_period=NULL, max_period=NULL, threshold=NULL, chars_around=NULL) {
+filter <- function(dataset, mode, min_period=NULL, max_period=NULL, threshold=NULL, chars_around=NULL, min_pct=NULL,
+                    max_pct=NULL) {
   source('utils/filter_functions.R')
   # perform input argument validation:
   required_colnames <- c('Index', 'SpeechDbId', 'Date', 'Period', 'Sitting', 'DocDbId', 'Speaker', 'Party',
                          'InterjectionCount', 'InterjectionContent', 'ParagraphCount', 'Speech')
-  valid_modes <- c('p', 'cc', 'cp', 'co', 'nc', 'np', 'vp')
+  valid_modes <- c('p', 'cc', 'cp', 'co', 'nc', 'np', 'vp', 'sw')
 
   # validate dataset
   if (! is.data.frame(dataset)) {
@@ -68,6 +70,8 @@ filter <- function(dataset, mode, min_period=NULL, max_period=NULL, threshold=NU
     stop('ERROR When filtering to keep the parts of speeches around coal only, the characters to be kept around these words need to be set.')
   } else if ((mode == 'nc') && (is.null(chars_around))) {
     stop('ERROR When filtering to keep the parts of speeches that do not contain a specified area around coal, the characters to be kept need to be set.')
+  } else if ((mode == 'sw') && (is.null(min_pct) || is.null(max_pct))) {
+    stop('ERROR When filtering to remove common and very uncommon words, the two percentage thresholds need to be set.')
   }
 
   # do the filtering
@@ -93,6 +97,9 @@ filter <- function(dataset, mode, min_period=NULL, max_period=NULL, threshold=NU
          },
          vp={ # remove the vocabulary that is used by the Bundestagspräsident(en) in the dataset from all the speeches
            filtered_dataset <- filter_remove_president_vocabulary_(dataset)
+         },
+         sw={ # remove words that are very common or very uncommon in the documents
+           filtered_dataset <- filter_irrelevant_words_(dataset, min_pct, max_pct)
          }
   )
 
