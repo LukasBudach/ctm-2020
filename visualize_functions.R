@@ -157,24 +157,26 @@ speaker_speeches_by_party_extremes <- function(raw, res, filename, multiple_peri
   png(filename=filename, width=1200, height=1200)
   par(oma = c(3.5, 1, 1, 1))
   if (multiple_periods) {
-    plot(x=plottable$period, y=plottable$position, col=plottable$color, xlab='Parliamentary Period',
-         ylab='Position Regarding Coal', xaxt = "n")
+    plot(x=plottable$period, y=plottable$position, col=plottable$color, xlab='Parliamentary Period', ylab='Position Regarding Coal', xaxt = "n")
     for (color in u_colors) {
       lines(x=u_periods, y=means$mean_pos[means$color == color], col=color)
       points(x=u_periods, y=means$mean_pos[means$color == color], col=color, pch=15, cex=1.5)
     }
   } else {
-    plot(plottable$position, col=plottable$color, xlab='Parliamentary Period', ylab='Position Regarding Coal', xaxt = "n")
+    plot(x=plottable$period, y=plottable$position, col=plottable$color, xlab='Parliamentary Period', ylab='Position Regarding Coal', xaxt = "n")
     abline(h=mean(plottable$position[plottable$color == 'black']), col='black')
     abline(h=mean(plottable$position[plottable$color == 'yellow']), col='yellow')
     abline(h=mean(plottable$position[plottable$color == 'green']), col='green')
     abline(h=mean(plottable$position[plottable$color == 'orange']), col='orange')
     abline(h=mean(plottable$position[plottable$color == 'blue']), col='blue')
     abline(h=mean(plottable$position[plottable$color == 'red']), col='red')
+    abline(h=mean(plottable$position[plottable$color == 'hotpink']), col='hotpink')
+    abline(h=mean(plottable$position[plottable$color == 'darkgrey']), col='darkgrey')
+    abline(h=mean(plottable$position[plottable$color == 'darkgreen']), col='darkgreen')
   }
-  par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
-  legend('top', legend=colnames(colors), col=as.character(colors[,]), pch=1, xpd=TRUE, bty='n', inset=c(0,0),
-         horiz=TRUE)
+  par(mar = c(5,4,4,8))
+  axis(1, at=plottable$period, las=2)
+  legend(x='top', legend=colnames(colors), col=as.character(colors[,]), pch=1)
   dev.off()
 }
 
@@ -209,6 +211,7 @@ party_speeches_by_party <- function(res, filename, multiple_periods=FALSE) {
   png(filename=filename, width=600, height=600)
   plot(x=plottable$period, y=plottable$position, col=plottable$color)
   par(mar = c(5,4,4,8))
+  axis(1, at=plottable$period, las=2)
   legend(x='right', legend=colnames(colors), col=as.character(colors[,]), pch=1)
   dev.off()
 }
@@ -256,6 +259,18 @@ draw_eiffel_tower_diagram <- function (res, filename){
   plot(res$words[, 'b'], res$words[, 'psi'], ylab="Word Fixed Effect", xlab="", type="n", cex.lab=14)
   title(xlab="Word Weight", line=12, cex.lab=14)
   text(res$words[, 'b'], res$words[, 'psi'], rownames(res$words))
+  abline(v=0)
+  dev.off()
+}
+
+draw_quanteda_word_weights <- function (res, filename){
+  png(filename=filename, width=6000, height=6000)
+  #par(mar=c(16, 16, 16, 16)) # create extra margin room on the right for an axis
+  par(mar=c(5, 4, 4, 8))
+  #plot(res$beta, res$psi, ylab="Word Fixed Effect", xlab="", type="n", cex.lab=14)
+  #title(xlab="Word Weight", line=12, cex.lab=14)
+  plot(res$beta, res$psi, ylab="Word Fixed Effect", xlab="Word Weight", type="n")
+  text(res$beta, res$psi, res$features)
   abline(v=0)
   dev.off()
 }

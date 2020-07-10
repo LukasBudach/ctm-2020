@@ -220,21 +220,21 @@ data <- group_speeches(data, 'speaker', multiple_periods=TRUE)
 mat <- get_frequency_matrix(data, sparse=0.9999)                 # create the TDM
 
 res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(13, 15, 2, -2), sigma=1, tol=5e-6)
-f <- file('data/party_p_18_19_co_300_scoredPro_scoredAnti.txt', 'w+')
+f <- file('data/speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_fixTwo.txt', 'w+')
 serialize(connection=f, object=res, ascii=TRUE)
 close(f)
 
 res <- run_wordfish(tdmat=mat,
                     repr_1=13,  # extreme pro
                     repr_2=15,  # extreme anti
-                    name='party_p_18_19_co_300_scoredPro_scoredAnti',
+                    name='speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_fixTwo',
                     tol=5e-6)
 
-f <- file('data/party_p_18_19_co_300_scoredPro_scoredAnti.txt', 'r')
+f <- file('data/speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_fixTwo.txt', 'r')
 res <- unserialize(f)
 close(f)
 
-speaker_speeches_by_party_extremes(res, filename='data/party_p_18_19_co_300_scoredPro_scoredAnti.png', multiple_periods=TRUE)
+speaker_speeches_by_party_extremes(raw=visualization_copy, res=res, filename='data/speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_fixTwo.png', multiple_periods=TRUE)
 
 # run wordfish with extremes for period 18, grouped by speaker
 data <- read_speeches('data/database_export_search_89.csv')
@@ -256,22 +256,22 @@ visualization_copy <- data
 data <- group_speeches(data, 'speaker', multiple_periods=FALSE)
 mat <- get_frequency_matrix(data, sparse=0.9999)                 # create the TDM
 
-res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(146, 148, 2, -2), sigma=1, tol=5e-6)
-f <- file('data/party_p_18_co_300_scoredPro_scoredAnti.txt', 'w+')
+res <- run_wordfish(tdmat=mat,
+                    repr_1=146,  # extreme pro
+                    repr_2=148,  # extreme anti
+                    name='speaker_p_18_co_300_scoredPro_scoredAnti_1e-9_dir',
+                    tol=1e-9)
+
+res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(146, 148, 2, -2), sigma=1, tol=1e-9)
+f <- file('data/speaker_p_18_co_300_scoredPro_scoredAnti_1e-9_dir.txt', 'w+')
 serialize(connection=f, object=res, ascii=TRUE)
 close(f)
 
-res <- run_wordfish(tdmat=mat,
-                    repr_1=13,  # extreme pro
-                    repr_2=15,  # extreme anti
-                    name='party_p_18_co_300_scoredPro_scoredAnti',
-                    tol=5e-6)
-
-f <- file('data/party_p_18_co_300_scoredPro_scoredAnti.txt', 'r')
+f <- file('data/speaker_p_18_co_300_scoredPro_scoredAnti_1e-9_dir.txt', 'r')
 res <- unserialize(f)
 close(f)
 
-speaker_speeches_by_party_extremes(raw=visualization_copy, res=res, filename='data/party_p_18_co_300_scoredPro_scoredAnti.png', multiple_periods=FALSE)
+speaker_speeches_by_party_extremes(raw=visualization_copy, res=res, filename='data/speaker_p_18_co_300_scoredPro_scoredAnti_1e-9_dir.png', multiple_periods=FALSE)
 
 # run wordfish with extremes for period 19, grouped by speaker
 data <- read_speeches('data/database_export_search_89.csv')
@@ -293,22 +293,22 @@ visualization_copy <- data
 data <- group_speeches(data, 'speaker', multiple_periods=FALSE)
 mat <- get_frequency_matrix(data, sparse=0.9999)                 # create the TDM
 
-res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(168, 170, 2, -2), sigma=1, tol=5e-6)
-f <- file('data/party_p_19_co_300_scoredPro_scoredAnti.txt', 'w+')
+res <- run_wordfish(tdmat=mat,
+                    repr_1=168,  # extreme pro
+                    repr_2=170,  # extreme anti
+                    name='speaker_p_19_co_300_scoredPro_scoredAnti_1e-9_dir',
+                    tol=1e-9)
+
+res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(168, 170, 2, -2), sigma=1, tol=1e-9)
+f <- file('data/speaker_p_19_co_300_scoredPro_scoredAnti_1e-9_dir.txt', 'w+')
 serialize(connection=f, object=res, ascii=TRUE)
 close(f)
 
-res <- run_wordfish(tdmat=mat,
-                    repr_1=13,  # extreme pro
-                    repr_2=15,  # extreme anti
-                    name='party_p_19_co_300_scoredPro_scoredAnti',
-                    tol=5e-6)
-
-f <- file('data/party_p_19_co_300_scoredPro_scoredAnti.txt', 'r')
+f <- file('data/speaker_p_19_co_300_scoredPro_scoredAnti_1e-9_dir.txt', 'r')
 res <- unserialize(f)
 close(f)
 
-speaker_speeches_by_party_extremes(raw=visualization_copy, res=res, filename='data/party_p_19_co_300_scoredPro_scoredAnti.png', multiple_periods=FALSE)
+speaker_speeches_by_party_extremes(raw=visualization_copy, res=res, filename='data/speaker_p_19_co_300_scoredPro_scoredAnti_1e-9_dir.png', multiple_periods=FALSE)
 
 # run quanteda wordfish with extremes for period 19, grouped by speaker
 library(quanteda)
@@ -329,22 +329,27 @@ data <- rbind(data, list(as.integer(1), as.integer(1), '2018-06-21', as.integer(
 data <- rbind(data, list(as.integer(2), as.integer(2), '2018-06-21', as.integer(19), as.integer(1), as.integer(2), 'AntiCoal', 'scoredAnti', as.integer(0), '', as.integer(0), paste(anti_coal$Speech, collapse=' ')))
 
 data <- filter(data, 'co', chars_around=300)
+data <- data[(data$Party=="fdp"),]
 visualization_copy <- data
-data <- group_speeches(data, 'speaker', multiple_periods=FALSE)
-#mat <- get_frequency_matrix(data, sparse=0.9999)
-corpus <- get_corpus(data, sparse=0.9999)
-dfm <- dfm(corpus, verbose=FALSE)
 
-textmodel_wordfish(
-  x=dfm,
-  dir = c(1, 2),
-  priors = c(Inf, Inf, 3, 1),
-  tol = c(1e-06, 1e-08),
-  dispersion = "poisson",
-  dispersion_level = c("feature", "overall"),
-  dispersion_floor = 0,
-  sparse = FALSE,
-  abs_err = FALSE,
-  svd_sparse = TRUE,
-  residual_floor = 0.5
+data <- group_speeches(data, 'speaker', multiple_periods=FALSE)
+
+corpus <- get_preprocessed_corpus(data=data, stem_speeches=FALSE, remove_numbers=TRUE)
+dfm <- dfm(corpus(corpus), remove=stopwords('de'), verbose=FALSE)
+#dfm <- dfm_trim(x=dfm, sparsity=0.9999)
+
+res <- textmodel_wordfish(x=dfm,
+                   #dir=c(1, 2), # extimated doc1 position < estimated doc2 position
+                   #tol=c(1e-3, 1e-4),
+                   #dispersion="poisson",
+                   #sparse=TRUE
 )
+
+draw_quanteda_word_weights(res, 'data/quanteda_word_weights.png')
+
+#textplot_wordcloud(dfm_trim(res$x, verbose=FALSE),
+#                   min_size = 1,
+#                   max_size = 18,
+#                   #min_count = 3,
+#                   #max_words = 50,
+#                   color = "black")
