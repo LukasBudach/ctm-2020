@@ -253,25 +253,23 @@ party_speeches_by_party_extremes <- function(res, filename, multiple_periods=FAL
   dev.off()
 }
 
-draw_eiffel_tower_diagram <- function (res, filename){
+draw_word_weights_and_frequencies <- function (res, filename){
   png(filename=filename, width=6000, height=6000)
-  par(mar=c(16, 16, 16, 16)) # create extra margin room on the right for an axis
-  plot(res$words[, 'b'], res$words[, 'psi'], ylab="Word Fixed Effect", xlab="", type="n", cex.lab=14)
-  title(xlab="Word Weight", line=12, cex.lab=14)
+  par(mar=c(32, 32, 4, 2), mgp=c(22, 8, 0), lwd=3)
+  plot(res$words[, 'b'], res$words[, 'psi'], ylab="Word Fixed Effect", xlab="", type="n", cex.lab=14, cex.axis=10)
+  title(xlab="Word Weight", cex.lab=14, cex.axis=10)
   text(res$words[, 'b'], res$words[, 'psi'], rownames(res$words))
-  abline(v=0)
+  abline(v=0, lwd=3)
   dev.off()
 }
 
-draw_quanteda_word_weights <- function (res, filename){
+draw_quanteda_word_weights_and_frequencies <- function (res, filename){
   png(filename=filename, width=6000, height=6000)
-  #par(mar=c(16, 16, 16, 16)) # create extra margin room on the right for an axis
-  par(mar=c(5, 4, 4, 8))
-  #plot(res$beta, res$psi, ylab="Word Fixed Effect", xlab="", type="n", cex.lab=14)
-  #title(xlab="Word Weight", line=12, cex.lab=14)
-  plot(res$beta, res$psi, ylab="Word Fixed Effect", xlab="Word Weight", type="n")
+  par(mar=c(32, 32, 4, 2), mgp=c(22, 8, 0), lwd=3)
+  plot(res$beta, res$psi, ylab="Word Fixed Effect", xlab="", type="n", cex.lab=14, cex.axis=10)
+  title(xlab="Word Weight", cex.lab=14, cex.axis=10)
   text(res$beta, res$psi, res$features)
-  abline(v=0)
+  abline(v=0, lwd=3)
   dev.off()
 }
 

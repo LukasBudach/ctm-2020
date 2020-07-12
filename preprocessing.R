@@ -57,7 +57,7 @@ res <- run_wordfish(tdmat=mat,
                     tol=1e-7)
 # visualization
 party_speeches_by_party(raw=visualization_copy, res=res, filename='data/party_p_17_19_green18_cdu18.png', TRUE)
-draw_eiffel_tower_diagram(res=res, filename='data/party_p_17_19_green18_cdu18_words.png')
+draw_word_weights_and_frequencies(res=res, filename='data/party_p_17_19_green18_cdu18_words.png')
 
 
 # run wordfish for periods 17-19 without any specific filtering, grouped by speaker
@@ -71,7 +71,7 @@ res <- run_wordfish(tdmat=mat,
                     name='speaker_p_17_19_Kießling_Roth',
                     tol=1e-7)
 # visualization
-draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_17_19_Kießling_Roth.png')
+draw_word_weights_and_frequencies(res=res, filename='data/speaker_p_17_19_Kießling_Roth.png')
 
 # run wordfish for period 19 without any specific filtering, grouped by speaker
 data <- read_speeches('data/database_export_search_89.csv')
@@ -87,7 +87,7 @@ res <- run_wordfish(tdmat=mat,
                     tol=1e-7)
 # visualization
 speaker_speeches_by_party(raw=visualization_copy, res=res, filename='data/speaker_p_19_runtime_test.png', multiple_periods=TRUE)
-draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_19_runtime_test_words.png')
+draw_word_weights_and_frequencies(res=res, filename='data/speaker_p_19_runtime_test_words.png')
 
 
 # run wordfish for periods 17-19 on only the text surrounding coal, grouped by party
@@ -104,7 +104,7 @@ res <- run_wordfish(tdmat=mat,
                     tol=1e-7)
 # visualization
 party_speeches_by_party(raw=visualization_copy, res=res, filename='data/party_p_17_19_co_200_green18_cdu18.png', TRUE)
-draw_eiffel_tower_diagram(res=res, filename='data/party_p_17_19_co_200_green18_cdu18_words.png')
+draw_word_weights_and_frequencies(res=res, filename='data/party_p_17_19_co_200_green18_cdu18_words.png')
 
 
 # run wordfish for periods 17-19 on only the text surrounding coal, grouped by speaker
@@ -121,7 +121,7 @@ res <- run_wordfish(tdmat=mat,
                     tol=1e-7)
 # visualization
 speaker_speeches_by_party(raw=visualization_copy, res=res, filename='data/speaker_p_17_19_co_100_Hofreiter18_Laemmel18.png', TRUE)
-draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_17_19_co_100_Hofreiter18_Laemmel18_words.png')
+draw_word_weights_and_frequencies(res=res, filename='data/speaker_p_17_19_co_100_Hofreiter18_Laemmel18_words.png')
 
 
 # run wordfish for periods 17-19 on only the text that doesn't include coal, grouped by party
@@ -138,7 +138,7 @@ res <- run_wordfish(tdmat=mat,
                     tol=1e-7)
 # visualization
 speaker_speeches_by_party(raw=visualization_copy, res=res, filename='data/speaker_p_17_19_nc_100_Hofreiter18_Laemmel18.png', multiple_periods=TRUE)
-draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_17_19_nc_100_Hofreiter18_Laemmel18_words.png')
+draw_word_weights_and_frequencies(res=res, filename='data/speaker_p_17_19_nc_100_Hofreiter18_Laemmel18_words.png')
 
 
 # run wordfish for periods 17-19 on only the text surrounding coal and having remove the parliament president, grouped by party
@@ -156,7 +156,7 @@ res <- run_wordfish(tdmat=mat,
                     tol=1e-7)
 # visualization
 party_speeches_by_party(raw=visualization_copy, res=res, filename='data/party_p_17_19_co_150_np_green18_cdu18.png', TRUE)
-draw_eiffel_tower_diagram(res=res, filename='data/party_p_17_19_co_150_np_green18_cdu18_words.png')
+draw_word_weights_and_frequencies(res=res, filename='data/party_p_17_19_co_150_np_green18_cdu18_words.png')
 
 
 # run wordfish for periods 17-19 without any specific filtering, grouped by party
@@ -174,7 +174,7 @@ res <- run_wordfish(tdmat=mat,
                     name='speaker_p_17_19_co_100_vp_np_green18_cdu18',
                     tol=1e-7)
 speaker_speeches_by_party(raw=visualization_copy, res=res, filename='data/speaker_p_17_19_co_100_vp_np_green18_cdu18.png', TRUE)
-draw_eiffel_tower_diagram(res=res, filename='data/speaker_p_17_19_co_100_vp_np_green18_cdu18_words.png')
+draw_word_weights_and_frequencies(res=res, filename='data/speaker_p_17_19_co_100_vp_np_green18_cdu18_words.png')
 
 
 # funnel diagrams with separately executed filters
@@ -203,6 +203,7 @@ draw_funnel_diagram(labels, wordcounts, 'data/funnel_pipeline_vp_np_co_300.png',
 # run wordfish with extremes for period 18 and 19, grouped by speaker
 data <- read_speeches('data/database_export_search_89.csv')
 data <- filter(data, 'p', min_period=18, max_period=19)
+data <- filter(data, 'co', chars_around=300)
 scored <- read_scored_extremes('data/scored_extremes_rounded.csv')
 ids_in_both <- intersect(data$SpeechDbId, scored$SpeechDbId)
 scored <- scored[scored$SpeechDbId %in% ids_in_both,]
@@ -215,21 +216,20 @@ data <- rbind(data, list(as.integer(0), as.integer(0), '2018-06-21', as.integer(
 data <- rbind(data, list(as.integer(1), as.integer(1), '2018-06-21', as.integer(18), as.integer(1), as.integer(1), 'Neutral', 'scoredNeutral', as.integer(0), '', as.integer(0), paste(neutral$Speech, collapse=' ')))
 data <- rbind(data, list(as.integer(2), as.integer(2), '2018-06-21', as.integer(18), as.integer(1), as.integer(2), 'AntiCoal', 'scoredAnti', as.integer(0), '', as.integer(0), paste(anti_coal$Speech, collapse=' ')))
 
-data <- filter(data, 'co', chars_around=300)
 visualization_copy <- data
 data <- group_speeches(data, 'speaker', multiple_periods=TRUE)
 mat <- get_frequency_matrix(data, sparse=0.9999)                 # create the TDM
-
-res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(13, 15, 2, -2), sigma=1, tol=5e-6)
-f <- file('data/speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_fixTwo.txt', 'w+')
-serialize(connection=f, object=res, ascii=TRUE)
-close(f)
 
 res <- run_wordfish(tdmat=mat,
                     repr_1=13,  # extreme pro
                     repr_2=15,  # extreme anti
                     name='speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_fixTwo',
                     tol=5e-6)
+
+# res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(13, 15, 2, -2), sigma=1, tol=5e-6)
+f <- file('data/speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_fixTwo.txt', 'w+')
+serialize(connection=f, object=res, ascii=TRUE)
+close(f)
 
 f <- file('data/speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_fixTwo.txt', 'r')
 res <- unserialize(f)
@@ -240,6 +240,7 @@ speaker_speeches_by_party_extremes(raw=visualization_copy, res=res, filename='da
 # run wordfish with extremes for period 18, grouped by speaker
 data <- read_speeches('data/database_export_search_89.csv')
 data <- filter(data, 'p', min_period=18, max_period=18)
+data <- filter(data, 'co', chars_around=300)
 scored <- read_scored_extremes('data/scored_extremes_rounded.csv')
 ids_in_both <- intersect(data$SpeechDbId, scored$SpeechDbId)
 scored <- scored[scored$SpeechDbId %in% ids_in_both,]
@@ -252,7 +253,6 @@ data <- rbind(data, list(as.integer(0), as.integer(0), '2018-06-21', as.integer(
 data <- rbind(data, list(as.integer(1), as.integer(1), '2018-06-21', as.integer(18), as.integer(1), as.integer(1), 'Neutral', 'scoredNeutral', as.integer(0), '', as.integer(0), paste(neutral$Speech, collapse=' ')))
 data <- rbind(data, list(as.integer(2), as.integer(2), '2018-06-21', as.integer(18), as.integer(1), as.integer(2), 'AntiCoal', 'scoredAnti', as.integer(0), '', as.integer(0), paste(anti_coal$Speech, collapse=' ')))
 
-data <- filter(data, 'co', chars_around=300)
 visualization_copy <- data
 data <- group_speeches(data, 'speaker', multiple_periods=FALSE)
 mat <- get_frequency_matrix(data, sparse=0.9999)                 # create the TDM
@@ -263,16 +263,16 @@ res <- run_wordfish(tdmat=mat,
                     name='speaker_p_18_co_300_scoredPro_scoredAnti_1e-9_dir',
                     tol=1e-9)
 
-res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(146, 148, 2, -2), sigma=1, tol=1e-9)
-f <- file('data/speaker_p_18_co_300_scoredPro_scoredAnti_1e-9_dir.txt', 'w+')
+res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(146, 148, 2, -2), tol=5e-5)
+f <- file('data/speaker_p_18_co_300_scoredPro_scoredAnti_5e-5_fixTwo_sigma3.txt', 'w+')
 serialize(connection=f, object=res, ascii=TRUE)
 close(f)
 
-f <- file('data/speaker_p_18_co_300_scoredPro_scoredAnti_1e-9_dir.txt', 'r')
+f <- file('data/speaker_p_18_co_300_scoredPro_scoredAnti_5e-5_fixTwo_sigma3.txt', 'r')
 res <- unserialize(f)
 close(f)
 
-speaker_speeches_by_party_extremes(raw=visualization_copy, res=res, filename='data/speaker_p_18_co_300_scoredPro_scoredAnti_1e-9_dir.png', multiple_periods=FALSE)
+speaker_speeches_by_party_extremes(raw=visualization_copy, res=res, filename='data/speaker_p_18_co_300_scoredPro_scoredAnti_5e-5_fixTwo_sigma3.png', multiple_periods=FALSE)
 
 # run wordfish with extremes for period 19, grouped by speaker
 data <- read_speeches('data/database_export_search_89.csv')
@@ -297,8 +297,8 @@ mat <- get_frequency_matrix(data, sparse=0.999)                 # create the TDM
 res <- run_wordfish(tdmat=mat,
                     repr_1=170,  # extreme anti
                     repr_2=168,  # extreme pro
-                    name='speaker_p_19_co_300_scoredPro_scoredAnti',
-                    tol=1e-7)
+                    name='speaker_p_19_co_300_scoredPro_scoredAnti_5e-3_dir',
+                    tol=5e-3)
 
 # res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(168, 170, 2, -2), sigma=1, tol=1e-9)
 f <- file('data/speaker_p_19_co_300_scoredPro_scoredAnti_1e-9_dir.txt', 'w+')
@@ -309,7 +309,7 @@ f <- file('data/speaker_p_19_co_300_scoredPro_scoredAnti_1e-9_dir.txt', 'r')
 res <- unserialize(f)
 close(f)
 
-speaker_speeches_by_party_extremes(raw=visualization_copy, res=res, filename='data/speaker_p_19_co_300_scoredPro_scoredAnti_1e-9_dir.png', multiple_periods=FALSE)
+speaker_speeches_by_party_extremes(raw=visualization_copy, res=res, filename='data/speaker_p_19_co_300_scoredPro_scoredAnti_5e-3_dir.png', multiple_periods=FALSE)
 
 # run quanteda wordfish with extremes for period 19, grouped by speaker
 library(quanteda)
@@ -317,6 +317,7 @@ library(quanteda.textmodels)
 
 data <- read_speeches('data/database_export_search_89.csv')
 data <- filter(data, 'p', min_period=19, max_period=19)
+data <- filter(data, 'co', chars_around=300)
 scored <- read_scored_extremes('data/scored_extremes_rounded.csv')
 ids_in_both <- intersect(data$SpeechDbId, scored$SpeechDbId)
 scored <- scored[scored$SpeechDbId %in% ids_in_both,]
@@ -328,11 +329,9 @@ anti_coal <- scored[scored$CoalScore < 0,]
 data <- rbind(data, list(as.integer(0), as.integer(0), '2018-06-21', as.integer(19), as.integer(1), as.integer(0), 'ProCoal', 'scoredPro', as.integer(0), '', as.integer(0), paste(pro_coal$Speech, collapse=' ')))
 data <- rbind(data, list(as.integer(1), as.integer(1), '2018-06-21', as.integer(19), as.integer(1), as.integer(1), 'Neutral', 'scoredNeutral', as.integer(0), '', as.integer(0), paste(neutral$Speech, collapse=' ')))
 data <- rbind(data, list(as.integer(2), as.integer(2), '2018-06-21', as.integer(19), as.integer(1), as.integer(2), 'AntiCoal', 'scoredAnti', as.integer(0), '', as.integer(0), paste(anti_coal$Speech, collapse=' ')))
+data <- data[(data$Party=="fdp"),] # remove party "FDP" to sparse dfm
 
-data <- filter(data, 'co', chars_around=300)
-data <- data[(data$Party=="fdp"),]
 visualization_copy <- data
-
 data <- group_speeches(data, 'speaker', multiple_periods=FALSE)
 
 corpus <- get_preprocessed_corpus(data=data, stem_speeches=FALSE, remove_numbers=TRUE)
@@ -346,7 +345,7 @@ res <- textmodel_wordfish(x=dfm,
                    #sparse=TRUE
 )
 
-draw_quanteda_word_weights(res, 'data/quanteda_word_weights.png')
+draw_quanteda_word_weights_and_frequencies(res, 'data/quanteda_word_weights_and_frequencies.png')
 
 #textplot_wordcloud(dfm_trim(res$x, verbose=FALSE),
 #                   min_size = 1,
