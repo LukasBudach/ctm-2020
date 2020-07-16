@@ -117,32 +117,43 @@ plot_word_weights <- function(trained_model, run_name) {
 
 # only for development, change as needed
 find_optimum <- function(min_co, max_co, min_min_pct, max_min_pct, min_max_pct, max_max_pct, step_co, step_min_pct,
-                         step_max_pct, filepath, use_rounded_scores=FALSE, use_only_extrema=FALSE, round_result=TRUE) {
-  results <- as.data.frame(matrix(nrow=0, ncol=9))
-  colnames(results) <- c('co', 'swMin', 'swMax', 'meanSquared', '05pct', '25pct', 'mean', '75pct', '95pct')
+                         step_max_pct, filepath, min_period, max_period, use_only_extrema=FALSE) {
+  library(ggpubr)
+
+  results <- as.data.frame(matrix(nrow=0, ncol=13))
+  colnames(results) <- c('roundedRes', 'roundedRef', 'co', 'swMin', 'swMax', 'meanSquared', '05pct', '25pct', 'mean',
+                         '75pct', '95pct', 'pearsonCoeff', 'pValue')
   data <- read_speeches('data/database_export_search_89.csv')
 
-  for (i in seq(min_co, max_co, step_co)) {
-    for (j in seq(min_min_pct, max_min_pct, step_min_pct)) {
-      for (k in seq(min_max_pct, max_max_pct, step_max_pct)) {
-        data_filtered <- filter(data, 'p', min_period=19, max_period=19)
-        data_filtered <- filter(data_filtered, 'co', chars_around=i)
-        data_filtered <- filter(data_filtered,'sw', min_pct=j, max_pct=k)
-        scored <- read_refence_speeches(use_rounded_scores)
-        scored <- attach_speeches(data_filtered, scored)
-        if (use_only_extrema) {
-          scored <- scored[abs(scored$CoalScore) >= 2,]
+  for (round_result in c(TRUE, FALSE)) {
+    for (use_rounded_scores in c(TRUE, FALSE)) {
+      for (i in seq(min_co, max_co, step_co)) {
+        for (j in seq(min_min_pct, max_min_pct, step_min_pct)) {
+          for (k in seq(min_max_pct, max_max_pct, step_max_pct)) {
+            data_filtered <- filter(data, 'p', min_period=min_period, max_period=max_period)
+            data_filtered <- filter(data_filtered, 'co', chars_around=i)
+            data_filtered <- filter(data_filtered,'sw', min_pct=j, max_pct=k)
+            scored <- read_refence_speeches(use_rounded_scores)
+            scored <- attach_speeches(data_filtered, scored)
+            if (use_only_extrema) {
+              scored <- scored[abs(scored$CoalScore) >= 2,]
+            }
+            cat('\n----------------------------------------------\n\n')
+            print(paste('round res', round_result, 'round ref', use_rounded_scores, 'co', i, 'min', j, 'max', k))
+            res <- run_wordscores(data_filtered, scored, 'trash', return_errors=TRUE,
+                                  return_scored_reference_separately=TRUE, round_result=round_result)
+
+            squared_err <- res$errors * res$errors
+            pearson <- cor.test(res$refResult$ManualScore, res$refResult$CreatedScore, method='pearson')
+
+            results <- rbind(results, list(round_result, use_rounded_scores, i, j, k, mean(squared_err),
+                                           quantile(res$errors, 0.05), quantile(res$errors, 0.25), mean(res$errors),
+                                           quantile(res$errors, 0.75), quantile(res$errors, 0.95),
+                                           pearson$estimate[[1]], pearson$p.value))
+            colnames(results) <- c('roundedRes', 'roundedRef', 'co', 'swMin', 'swMax', 'meanSquared', '05pct',
+                                   '25pct', 'mean', '75pct', '95pct', 'pearsonCoeff', 'pValue')
+          }
         }
-        cat('\n----------------------------------------------\n\n')
-        print(paste('co', i, 'min', j, 'max', k))
-        res <- run_wordscores(data_filtered, scored, 'trash', return_errors=TRUE, round_result=round_result)
-
-        squared_err <- res$errors * res$errors
-
-        results <- rbind(results, list(i, j, k, mean(squared_err), quantile(res$errors, 0.05),
-                                       quantile(res$errors, 0.25), mean(res$errors), quantile(res$errors, 0.75),
-                                       quantile(res$errors, 0.95)))
-        colnames(results) <- c('co', 'swMin', 'swMax', 'meanSquared', '05pct', '25pct', 'mean', '75pct', '95pct')
       }
     }
   }

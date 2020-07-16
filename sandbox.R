@@ -206,3 +206,36 @@ res <- unserialize(f)
 close(f)
 
 party_speeches_by_party_extremes(res, filename='data/party_p_18_19_co_300_scoredPro19_scoredAnti19_separate.png', TRUE)
+
+
+
+results <- find_optimum(100, 700, 0.0, 0.1, 0.25, 0.75,
+                        50,0.005, 0.1, 'data/wordscores_optim_p19.csv',
+                        19, 19)
+
+results <- find_optimum(100, 700, 0.0, 0.1, 0.25, 0.75,
+                        50,0.005, 0.1, 'data/wordscores_optim_p18.csv',
+                        18, 18)
+
+results <- find_optimum(100, 700, 0.0, 0.1, 0.25, 0.75,
+                        50,0.005, 0.1, 'data/wordscores_optim_p18_19.csv',
+                        18, 19)
+
+#                 Period 18               || Period 19
+nina_scores <-  c(-3,   1.5,  -2,   -3,   1,  -2.0, 3,  1.5,  -2.5, 2)
+lukas_scores <- c(-3,   1.5,  -1.8, -2,   2,  -0.5, 3,  1.5,  -2,   2)
+
+pearson <- cor.test(nina_scores, lukas_scores, method='pearson')
+pearson_rounded <- cor.test(round(nina_scores), round(lukas_scores), method='pearson')
+kendall <- cor.test(nina_scores, lukas_scores, method='kendall')
+kendall_rounded <- cor.test(round(nina_scores), round(lukas_scores), method='kendall')
+
+pearson <- list('coeff'=pearson$estimate[[1]], 'pScore'=pearson$p.value)
+pearson_rounded <- list('coeff'=pearson_rounded$estimate[[1]], 'pScore'=pearson_rounded$p.value)
+kendall <- list('coeff'=kendall$estimate[[1]], 'pScore'=kendall$p.value)
+kendall_rounded <- list('coeff'=kendall_rounded$estimate[[1]], 'pScore'=kendall_rounded$p.value)
+
+corr_results <- list('pearson'=pearson, 'pearsonRounded'=pearson_rounded,
+                     'kendall'=kendall, 'kendallRounded'=kendall_rounded)
+
+write.csv(corr_results, file='data/something.csv')

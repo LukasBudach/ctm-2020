@@ -37,4 +37,5 @@ draw_funnel_diagram(labels, wc, 'data/funnel_pipeline_co_400_sw_07_45.png', pipe
 #################################################
 
 results <- find_optimum(400, 410, 0.068, 0.082, 0.45, 0.46,
-                        50,0.001, 0.02, 'data/wordscores_optim_specific.csv')
+                        50,0.001, 0.02, 'data/wordscores_optim_specific.csv',
+                        19, 19)
