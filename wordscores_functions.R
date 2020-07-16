@@ -1,4 +1,4 @@
-read_refence_speeches <- function(use_rounded_scores=FALSE) {
+read_reference_speeches <- function(use_rounded_scores=FALSE) {
   library(readr)
   col_names <- c('SpeechDbId', 'CoalScore')
   cols <- cols(SpeechDbId=col_integer(), CoalScore=col_double())
@@ -133,7 +133,7 @@ find_optimum <- function(min_co, max_co, min_min_pct, max_min_pct, min_max_pct, 
             data_filtered <- filter(data, 'p', min_period=min_period, max_period=max_period)
             data_filtered <- filter(data_filtered, 'co', chars_around=i)
             data_filtered <- filter(data_filtered,'sw', min_pct=j, max_pct=k)
-            scored <- read_refence_speeches(use_rounded_scores)
+            scored <- read_reference_speeches(use_rounded_scores)
             scored <- attach_speeches(data_filtered, scored)
             if (use_only_extrema) {
               scored <- scored[abs(scored$CoalScore) >= 2,]
@@ -160,4 +160,77 @@ find_optimum <- function(min_co, max_co, min_min_pct, max_min_pct, min_max_pct, 
 
   write_csv(results, path=filepath)
   return(results)
+}
+
+
+plot_speeches_by_party <- function(raw, res, filename, multiple_periods=FALSE, groupedByParty=FALSE) {
+  plottable <- data.frame()
+  colors <- data.frame("cducsu"="black", "fdp"="yellow", "gruene"="green", "spd"="orange", "afd"="blue", "linke"="red")
+
+  speaker <- c()
+  periods <- c()
+
+  for (el in res$result$SpeechDbId) {
+    speaker <- append(speaker, raw$Speaker[raw$SpeechDbId == el])
+    if (multiple_periods) {
+      periods <- append(periods, raw$Period[raw$SpeechDbId == el])
+    }
+  }
+
+  for(i in seq(1, length(speaker))) {
+    party <- unique(raw$Party[raw$Speaker == speaker[i]])
+    if (is.na(party)) {
+      next
+    }
+    if (!party %in% colnames(colors)) {
+      next
+    }
+    if (multiple_periods) {
+      plottable <- rbind(plottable, list(i, periods[i], res$result$CreatedScore[i], colors[[party]]))
+    } else {
+      plottable <- rbind(plottable, list(i, raw$Period[i], res$result$CreatedScore[i], colors[[party]]))
+    }
+  }
+
+  colnames(plottable) <- c('speaker', 'period', 'position', 'color')
+  png(filename=filename, width=1200, height=1200)
+
+  if (groupedByParty) {
+    plot(x=plottable$period, y=plottable$position, col=plottable$color, xlab='Parliamentary Period', ylab='Position Regarding Coal', xaxt = "n")
+  } else {
+
+    if (multiple_periods) {
+      means <- data.frame()
+      u_periods <- unique(plottable$period)
+      u_colors <- unique(plottable$color)
+
+      for (col in u_colors) {
+        for (p in u_periods) {
+          means <- rbind(means, list(col, p, mean(plottable$position[(plottable$color == col) & (plottable$period == p)])))
+        }
+      }
+      colnames(means) <- c('color', 'period', 'mean_pos')
+    }
+
+    par(oma = c(3.5, 1, 1, 1))
+    if (multiple_periods) {
+      plot(x=plottable$period, y=plottable$position, col=plottable$color, xlab='Parliamentary Period', ylab='Position Regarding Coal', xaxt = "n")
+      for (color in u_colors) {
+        lines(x=u_periods, y=means$mean_pos[means$color == color], col=color)
+        points(x=u_periods, y=means$mean_pos[means$color == color], col=color, pch=15, cex=1.5)
+      }
+    } else {
+      plot(x=plottable$period, y=plottable$position, col=plottable$color, xlab='Parliamentary Period', ylab='Position Regarding Coal', xaxt = "n")
+      abline(h=mean(plottable$position[plottable$color == 'black']), col='black')
+      abline(h=mean(plottable$position[plottable$color == 'yellow']), col='yellow')
+      abline(h=mean(plottable$position[plottable$color == 'green']), col='green')
+      abline(h=mean(plottable$position[plottable$color == 'orange']), col='orange')
+      abline(h=mean(plottable$position[plottable$color == 'blue']), col='blue')
+      abline(h=mean(plottable$position[plottable$color == 'red']), col='red')
+    }
+  }
+
+  axis(1, at=plottable$period, las=2)
+  legend(x='topright', legend=colnames(colors), col=as.character(colors[,]), pch=1)
+  dev.off()
 }

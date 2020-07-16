@@ -223,15 +223,15 @@ mat <- get_frequency_matrix(data, sparse=0.9999)                 # create the TD
 res <- run_wordfish(tdmat=mat,
                     repr_1=13,  # extreme pro
                     repr_2=15,  # extreme anti
-                    name='speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_fixTwo',
+                    name='speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_dir',
                     tol=5e-6)
 
 # res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(13, 15, 2, -2), sigma=1, tol=5e-6)
-f <- file('data/speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_fixTwo.txt', 'w+')
-serialize(connection=f, object=res, ascii=TRUE)
-close(f)
+# f <- file('data/speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_fixTwo.txt', 'w+')
+# serialize(connection=f, object=res, ascii=TRUE)
+# close(f)
 
-f <- file('data/speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_fixTwo.txt', 'r')
+f <- file('data/speaker_p_18_19_co_300_scoredPro_scoredAnti_5e-6_dir.txt', 'r')
 res <- unserialize(f)
 close(f)
 
@@ -260,15 +260,15 @@ mat <- get_frequency_matrix(data, sparse=0.9999)                 # create the TD
 res <- run_wordfish(tdmat=mat,
                     repr_1=146,  # extreme pro
                     repr_2=148,  # extreme anti
-                    name='speaker_p_18_co_300_scoredPro_scoredAnti_1e-9_dir',
-                    tol=1e-9)
+                    name='speaker_p_18_co_300_scoredPro_scoredAnti_5e-e_dir',
+                    tol=5e-5)
 
-res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(146, 148, 2, -2), tol=5e-5)
-f <- file('data/speaker_p_18_co_300_scoredPro_scoredAnti_5e-5_fixTwo_sigma3.txt', 'w+')
-serialize(connection=f, object=res, ascii=TRUE)
-close(f)
+# res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(146, 148, 2, -2), tol=5e-5)
+# f <- file('data/speaker_p_18_co_300_scoredPro_scoredAnti_5e-5_fixTwo.txt', 'w+')
+# serialize(connection=f, object=res, ascii=TRUE)
+# close(f)
 
-f <- file('data/speaker_p_18_co_300_scoredPro_scoredAnti_5e-5_fixTwo_sigma3.txt', 'r')
+f <- file('data/speaker_p_18_co_300_scoredPro_scoredAnti_5e-5_dir.txt', 'r')
 res <- unserialize(f)
 close(f)
 
@@ -300,12 +300,12 @@ res <- run_wordfish(tdmat=mat,
                     name='speaker_p_19_co_300_scoredPro_scoredAnti_5e-3_dir',
                     tol=5e-3)
 
-# res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(168, 170, 2, -2), sigma=1, tol=1e-9)
-f <- file('data/speaker_p_19_co_300_scoredPro_scoredAnti_1e-9_dir.txt', 'w+')
-serialize(connection=f, object=res, ascii=TRUE)
-close(f)
+# res <- wordfish(input=mat, fixtwo=TRUE, fixdoc=c(168, 170, 2, -2), sigma=1, tol=5e-3)
+# f <- file('speaker_p_19_co_300_scoredPro_scoredAnti_5e-3_fixTwo.txt', 'w+')
+# serialize(connection=f, object=res, ascii=TRUE)
+# close(f)
 
-f <- file('data/speaker_p_19_co_300_scoredPro_scoredAnti_1e-9_dir.txt', 'r')
+f <- file('data/speaker_p_19_co_300_scoredPro_scoredAnti_5e-3_dir.txt', 'r')
 res <- unserialize(f)
 close(f)
 

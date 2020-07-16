@@ -11,7 +11,8 @@ data <- read_speeches('data/database_export_search_89.csv')
 data <- filter(data, 'p', min_period=19, max_period=19)
 data <- filter(data, 'co', chars_around=co)
 data <- filter(data,'sw', min_pct=sw_min, max_pct=sw_max)
-reference <- read_refence_speeches(use_rounded_scores=FALSE)
+raw <- data
+reference <- read_reference_speeches(use_rounded_scores=FALSE)
 reference <- attach_speeches(data, reference)
 if (use_only_extrema) {
   reference <- reference[abs(reference$CoalScore) >= 2,]
@@ -21,6 +22,8 @@ run_name <- paste0('wordscores_rounded_co', co, '_sw_', round(sw_min*100), '_', 
 
 res <- run_wordscores(data, reference, run_name, round_result=TRUE, return_scored_reference_separately=TRUE,
                       return_model=TRUE)
+
+plot_speeches_by_party(raw=raw, res=res, filename='data/wordscores_speaker_19_rounded.png', groupedByParty=FALSE)
 plot_results_vs_expected(res$refResult, run_name)
 plot_word_weights(res$model, run_name)
 

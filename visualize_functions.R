@@ -45,20 +45,6 @@ speaker_speeches_by_party <- function(raw, res, filename, multiple_periods=FALSE
     indices_no_period <- rownames(res$documents)
   }
 
-  #for(i in rownames(res$documents)) {
-  #  if (is.na(i)) {
-  #    next
-  #  }
-  #  party <- unique(raw$Party[raw$Speaker == i])
-  #  if (is.na(party)) {
-  #    next
-  #  }
-  #  plottable <- rbind(plottable, list(i, res$documents[as.String(i), 'omega'], colors[[party]]))
-  #}
-  #colnames(plottable) <- c('speaker', 'position', 'color')
-
-
-
   for(i in seq(1, length(indices_no_period))) {
     party <- unique(raw$Party[raw$Speaker == indices_no_period[i]])
     if (is.na(party)) {
