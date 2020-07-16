@@ -2,13 +2,15 @@
 ######## Example full wordscores run #########
 ##############################################
 
-co <- 400
-sw_min <- 0.07
+co <- 450
+sw_min <- 0.005
 sw_max <- 0.45
+min_p <- 18
+max_p <- 19
 use_only_extrema <- FALSE
 
 data <- read_speeches('data/database_export_search_89.csv')
-data <- filter(data, 'p', min_period=19, max_period=19)
+data <- filter(data, 'p', min_period=min_p, max_period=max_p)
 data <- filter(data, 'co', chars_around=co)
 data <- filter(data,'sw', min_pct=sw_min, max_pct=sw_max)
 raw <- data
@@ -18,12 +20,12 @@ if (use_only_extrema) {
   reference <- reference[abs(reference$CoalScore) >= 2,]
 }
 
-run_name <- paste0('wordscores_rounded_co', co, '_sw_', round(sw_min*100), '_', round(sw_max*100), '_no_numbers_scores_raw')
+run_name <- paste0('wordscores_rounded_p_', min_p, '_', max_p, '_co_', co, '_sw_', round(sw_min*100), '_', round(sw_max*100), '_no_numbers_scores_raw')
 
 res <- run_wordscores(data, reference, run_name, round_result=TRUE, return_scored_reference_separately=TRUE,
                       return_model=TRUE)
 
-plot_speeches_by_party(raw=raw, res=res, filename='data/wordscores_speaker_19_rounded.png', groupedByParty=FALSE)
+plot_speeches_by_party(raw=raw, res=res, filename=paste0('data/', run_name, '.png'), groupedByParty=FALSE, multiple_periods=TRUE)
 plot_results_vs_expected(res$refResult, run_name)
 plot_word_weights(res$model, run_name)
 

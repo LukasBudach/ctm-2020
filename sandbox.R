@@ -239,3 +239,35 @@ corr_results <- list('pearson'=pearson, 'pearsonRounded'=pearson_rounded,
                      'kendall'=kendall, 'kendallRounded'=kendall_rounded)
 
 write.csv(corr_results, file='data/something.csv')
+
+
+
+########################## Wordfish ##########################
+
+co <- 500
+sw_min <- 0.01
+sw_max <- 0.25
+min_p <- 18
+max_p <- 19
+
+run_name <- paste0('wordfish_p_', min_p, '_', max_p, '_co_', co, '_sw_',
+                   strsplit(as.character(sw_min), "\\.")[[1]][2], '_',
+                   strsplit(as.character(sw_max), "\\.")[[1]][2])
+
+
+data <- read_speeches('data/database_export_search_89.csv')
+data <- filter(data, 'p', min_period=min_p, max_period=max_p)
+data <- filter(data, 'co', chars_around=co)
+data <- filter(data, 'sw', min_pct=sw_min, max_pct=sw_max)
+visualization_copy <- data
+data <- group_speeches(data, 'speaker', multiple_periods=(min_p != max_p))   # group the speeches by their party
+mat <- get_frequency_matrix(data, sparse=0.9999)
+run_name <- paste0(run_name, '_speaker', '_Hofreiter19', '_Laemmel19')
+res <- run_wordfish(tdmat=mat,
+                    repr_1=217, # anti
+                    repr_2=215, # pro
+                    name=run_name,
+                    tol=1e-7)
+# visualization
+speaker_speeches_by_party(raw=visualization_copy, res=res, filename=paste0('data/', run_name, '.png'), (min_p != max_p))
+draw_word_weights_and_frequencies(res=res, filename=paste0('data/', run_name, '_words.png'))
