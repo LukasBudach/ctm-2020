@@ -1,21 +1,21 @@
-# Title     : TODO
-# Objective : TODO
-# Created by: lukas
-# Created on: 29/05/2020
+# Title     : Sentiment analysis
+# Objective : Running sentiment analysis on the political speeches and processing the results
+# Comment   : No longer in use, results were never good enough to be employed for further work, only use was to identify
+#             those speeches with the strongest sentiment in order to limit the candidates for manual scoring
 
 # only needs to be executed once, as the dictionary of positive/negative words does not need to change
 dictionaryGerman <- get_sentiment_dictionary()
 
-raw <-read_speeches('data/database_export_search_89.csv')
-raw <- filter(raw, 'p', min_period=18, max_period=18)
-raw <- filter(raw, 'np')
+raw <-read_speeches('../../data/database_export_search_89.csv')
+raw <- filter_speeches(raw, 'p', min_period=18, max_period=18)
+raw <- filter_speeches(raw, 'np')
 raw <- group_speeches(raw, 'none', multiple_periods=TRUE)
 
-data <- read_speeches('data/database_export_search_89.csv')
-data <- filter(data, 'p', min_period=18, max_period=18)
-data <- filter(data, 'vp')
-data <- filter(data, 'np')
-data <- filter(data, 'co', chars_around=300)
+data <- read_speeches('../../data/database_export_search_89.csv')
+data <- filter_speeches(data, 'p', min_period=18, max_period=18)
+data <- filter_speeches(data, 'vp')
+data <- filter_speeches(data, 'np')
+data <- filter_speeches(data, 'co', chars_around=300)
 data <- group_speeches(data, 'none', multiple_periods=TRUE)
 # data <- data[nchar(data$Speech) < 1000,]
 
@@ -24,7 +24,7 @@ data$SpeechStem <- get_stemmed_speeches(data)
 library(SentimentAnalysis)
 data$Sentiment <- analyzeSentiment(data$SpeechStem, language='german', rules=list('GermanSentiment'=list(ruleLinearModel, dictionaryGerman)))$GermanSentiment
 
-data$Speech = raw$Speech
+data$Speech <- raw$Speech
 data <- data[(data$Sentiment <= quantile(data$Sentiment, 0.05)) | (data$Sentiment >= quantile(data$Sentiment, 0.95)),]
 
 data$SpeechStem <- NULL
@@ -32,7 +32,7 @@ data <- data[with(data, order(Sentiment)),]
 
 write_delim(data, 'data/extreme_sentiment_co_18_test.csv', delim='\n')
 
-topic_scores <- read_topic_scores('data/topic_scores_Kohle.csv')
+topic_scores <- read_topic_scores('../../data/topic_scores_Kohle.csv')
 
 topic_scores <- apply_threshold(threshold = 0, topic_scores = topic_scores)
 data <- calculate_total_sentiment(topic_scores, data)
@@ -109,7 +109,7 @@ for (i in seq(1, nrow(data))) {
 
 
 weights <- get_weights_vector(initialize_with=0)
-weights$GreenPolicies = 1
+weights$GreenPolicies <- 1
 weights['GreenPolicies'] <- 1
 
 weights <- get_weights_vector(initialize_with=0)

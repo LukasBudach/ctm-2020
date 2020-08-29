@@ -1,6 +1,8 @@
 # Title     : Preprocessing functions
 # Objective : Provide functions that are used to preprocess documents and create a TDM
 
+library(tm)
+
 
 stem_speech <- function(x) {
   library(SnowballC)
@@ -11,8 +13,6 @@ stem_speech <- function(x) {
 
 
 get_preprocessed_corpus <- function(dataset, stem_speeches=FALSE, remove_numbers=TRUE) {
-  library(tm)
-
   corpus <- VCorpus(VectorSource(dataset$Speech), readerControl=list(language='ger'))
   if (remove_numbers) {
     corpus <- tm_map(corpus, removeNumbers) # REMOVE NUMBERS
@@ -30,8 +30,6 @@ get_preprocessed_corpus <- function(dataset, stem_speeches=FALSE, remove_numbers
 
 
 get_frequency_matrix <- function(dataset, stem_speeches=FALSE, sparse=0.999) {
-  library(tm)
-
   corpus <- get_preprocessed_corpus(dataset, stem_speeches=stem_speeches)
   freq_mat <- TermDocumentMatrix(corpus, control=list(tolower=FALSE))
   sparce_mat <- removeSparseTerms(freq_mat, sparse)

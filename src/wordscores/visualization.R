@@ -48,7 +48,7 @@ plot_word_weights <- function(trained_model, run_name) {
 
 plot_speeches_by_party <- function(raw, res, filename, multiple_periods=FALSE) {
   # creates a plot placing each document (speech) score in a 2D space and showing the party mean
-  # x-axis with multiple_periods=FALSE  -> continuous counter for the documents TODO: check
+  # x-axis with multiple_periods=FALSE  -> continuous counter for the documents
   # x-axis with multiple_periods=TRUE   -> parliamentary period of speeches
   # y-axis                              -> document score in the coal policy space
 
@@ -105,7 +105,6 @@ plot_speeches_by_party <- function(raw, res, filename, multiple_periods=FALSE) {
       points(x=u_periods, y=means$mean_pos[means$color == color], col=color, pch=15, cex=3)
     }
   } else {
-    # TODO: check whether this plots correctly for only one period
     plot(x=plottable$period, y=plottable$position, col=plottable$color, xlab='Parliamentary Period',
          ylab='Position Regarding Coal', xaxt = "n", cex.lab=3, cex.axis=2)
     abline(h=mean(plottable$position[plottable$color == 'black']), col='black')

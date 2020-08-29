@@ -1,9 +1,5 @@
-# Title     : TODO
-# Objective : TODO
-# Created by: lukas
-# Created on: 29/05/2020
-
-source('preprocessing_functions.R')
+# Title     : Sentiment analysis functions
+# Objective : Utility functions for sentiment analysis
 
 get_sentiment_dictionary <- function() {
   library(readr)
@@ -18,8 +14,8 @@ get_sentiment_dictionary <- function() {
                Score=col_double(),
                Alt=col_character()
                )
-  dict_pos <- read_delim('data/SentiWS_v1.8c_Positive.txt', '	', skip=0, col_names=col_names, col_types=cols)
-  dict_neg <- read_delim('data/SentiWS_v1.8c_Negative.txt', '	', skip=0, col_names=col_names, col_types=cols)
+  dict_pos <- read_delim('../../data/SentiWS_v1.8c_Positive.txt', '	', skip=0, col_names=col_names, col_types=cols)
+  dict_neg <- read_delim('../../data/SentiWS_v1.8c_Negative.txt', '	', skip=0, col_names=col_names, col_types=cols)
 
   dict_pos$Word <- gsub(dict_pos$Word, pattern="\\|.*", replacement='')
   dict_neg$Word <- gsub(dict_neg$Word, pattern="\\|.*", replacement='')
