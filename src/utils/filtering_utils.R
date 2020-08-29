@@ -1,7 +1,6 @@
 # Title     : Filter utilities
 # Objective : Provides utility functions for filter functions
-# Created by: lukas
-# Created on: 22/05/2020
+
 
 get_coal_count_ <- function(dataset) {
   library(stringr)
@@ -16,6 +15,7 @@ get_coal_count_ <- function(dataset) {
   return(cts)
 }
 
+
 get_extended_coal_positions_ <- function(dataset, row_idx, chars_around) {
   library(stringr)
 
@@ -24,6 +24,7 @@ get_extended_coal_positions_ <- function(dataset, row_idx, chars_around) {
   positions[,'end'] <- positions[,'end'] + chars_around
   return(positions)
 }
+
 
 extend_positions_borders_ <- function(dataset, row_idx, positions) {
   for (i in seq(1, nrow(positions))) {
@@ -51,6 +52,7 @@ extend_positions_borders_ <- function(dataset, row_idx, positions) {
   return(positions)
 }
 
+
 merge_overlapping_position_segments_ <- function(positions) {
   found_matches <- TRUE
     while(found_matches){
@@ -77,6 +79,7 @@ merge_overlapping_position_segments_ <- function(positions) {
     }
   return(positions)
 }
+
 
 get_presidents_map <- function() {
   library(hash)
